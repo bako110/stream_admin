@@ -1,4 +1,5 @@
 export type UserRole = 'user' | 'artist' | 'admin'
+export type VerificationStatus = 'none' | 'pending' | 'approved' | 'rejected'
 
 export interface User {
   id: string
@@ -13,6 +14,9 @@ export interface User {
   phone: string | null
   is_verified: boolean
   is_active: boolean
+  verification_status?: VerificationStatus
+  verification_note?: string | null
+  verification_requested_at?: string | null
   created_at: string
 }
 

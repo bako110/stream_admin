@@ -11,6 +11,7 @@ import { SeriesPage } from '@/pages/SeriesPage'
 import { SeasonsPage } from '@/pages/SeasonsPage'
 import { EpisodesPage } from '@/pages/EpisodesPage'
 import { ManagersPage } from '@/pages/ManagersPage'
+import { VerificationPage } from '@/pages/VerificationPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="content/seasons" element={<SeasonsPage />} />
               <Route path="content/episodes" element={<EpisodesPage />} />
               <Route path="managers" element={<ManagersPage />} />
+              <Route path="verification" element={<VerificationPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

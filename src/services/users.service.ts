@@ -2,6 +2,16 @@ import api from '@/lib/api'
 import type { User, UserRole } from '@/types'
 
 export const usersService = {
+  async listPendingVerification(): Promise<User[]> {
+    const { data } = await api.get<User[]>('/users', { params: { verification_status: 'pending', limit: 100 } })
+    return data
+  },
+
+  async reviewVerification(userId: string, action: 'approve' | 'reject', note?: string): Promise<User> {
+    const { data } = await api.patch<User>(`/users/${userId}/verify`, { action, note })
+    return data
+  },
+
   async list(page = 1, limit = 20, role?: string): Promise<User[]> {
     const params: Record<string, unknown> = { page, limit }
     if (role) params.role = role

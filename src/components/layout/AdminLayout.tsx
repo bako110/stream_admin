@@ -8,6 +8,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/content/series': 'Séries',
   '/content/episodes': 'Épisodes',
   '/managers': 'Managers',
+  '/verification': 'Vérifications FoliX',
 }
 
 export function AdminLayout() {

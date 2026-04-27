@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Film, Tv, Layers, ListVideo, LogOut, ShieldCheck,
+  LayoutDashboard, Users, Film, Tv, Layers, ListVideo, LogOut, ShieldCheck, BadgeCheck,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import clsx from 'clsx'
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/content/seasons', icon: Layers, label: 'Saisons' },
   { to: '/content/episodes', icon: ListVideo, label: 'Épisodes' },
   { to: '/managers', icon: ShieldCheck, label: 'Managers' },
+  { to: '/verification', icon: BadgeCheck, label: 'Vérifications' },
 ]
 
 export function Sidebar() {
