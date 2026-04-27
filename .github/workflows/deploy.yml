@@ -44,4 +44,6 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: nginx -s reload
+          script: |
+            cd /opt/backend-stack
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
