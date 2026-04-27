@@ -46,6 +46,13 @@ export function EpisodesPage() {
     enabled: !!selectedSerieId,
   })
 
+  // Auto-sélectionner la première saison disponible si la saison courante n'est pas dans la liste
+  useEffect(() => {
+    if (seasons.length === 0) return
+    const exists = seasons.some(s => s.number === selectedSeason)
+    if (!exists) setSelectedSeason(seasons[0].number)
+  }, [seasons])
+
   const { data: episodes = [], isLoading: epLoading } = useQuery({
     queryKey: ['episodes', selectedSerieId, selectedSeason],
     queryFn: () => contentService.getEpisodes(selectedSerieId, selectedSeason),
@@ -124,7 +131,7 @@ export function EpisodesPage() {
           </h2>
           <p className="text-sm text-gray-500">{episodes.length} épisode{episodes.length !== 1 ? 's' : ''}</p>
         </div>
-        {selectedSerieId && (
+        {selectedSerieId && seasons.length > 0 && (
           <button onClick={openCreate} className="btn-primary">
             <Plus className="w-4 h-4" />Ajouter un épisode
           </button>
@@ -172,6 +179,11 @@ export function EpisodesPage() {
       {!selectedSerieId ? (
         <div className="card p-12 text-center text-gray-500">
           Sélectionnez une série pour voir ses épisodes
+        </div>
+      ) : seasons.length === 0 ? (
+        <div className="card p-12 text-center space-y-2">
+          <p className="text-gray-400 font-medium">Aucune saison pour cette série</p>
+          <p className="text-gray-600 text-sm">Créez d'abord une saison depuis la page <button onClick={() => navigate(`/content/seasons?serieId=${selectedSerieId}`)} className="text-violet-400 hover:underline">Saisons</button></p>
         </div>
       ) : (
         <div className="card overflow-hidden">
@@ -243,40 +255,63 @@ export function EpisodesPage() {
           onClose={closeForm}
         >
           <form onSubmit={e => { e.preventDefault(); editing ? mutUpdate.mutate() : mutCreate.mutate() }} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Numéro *</label>
-                <input
-                  required type="number" min="1" className="input"
-                  value={form.number}
-                  onChange={e => setForm(f => ({ ...f, number: Number(e.target.value) }))}
-                  disabled={!!editing}
-                />
+            <div className="space-y-3">
+              {/* Saison — visible uniquement en création */}
+              {!editing && (
+                <div>
+                  <label className="label">Saison *</label>
+                  <select
+                    className="input"
+                    value={selectedSeason}
+                    onChange={e => setSelectedSeason(Number(e.target.value))}
+                  >
+                    {seasons.map(s => (
+                      <option key={s.id} value={s.number}>
+                        Saison {s.number}{s.title ? ` — ${s.title}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Numéro *</label>
+                  <input
+                    required type="number" min="1" className="input"
+                    value={form.number}
+                    onChange={e => setForm(f => ({ ...f, number: Number(e.target.value) }))}
+                    disabled={!!editing}
+                  />
+                </div>
+                <div>
+                  <label className="label">Accès</label>
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, is_free: !f.is_free }))}
+                    className={clsx(
+                      'w-full h-10 rounded-lg border text-sm font-medium transition-colors',
+                      form.is_free
+                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                        : 'border-violet-500/50 bg-violet-500/10 text-violet-400'
+                    )}
+                  >
+                    {form.is_free ? 'Gratuit' : 'Premium'}
+                  </button>
+                </div>
               </div>
-              <div className="col-span-2">
+              <div>
                 <label className="label">Titre *</label>
                 <input required className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
               </div>
-              <div className="col-span-2">
-                <label className="label">Synopsis</label>
-                <textarea rows={2} className="input resize-none" value={form.synopsis} onChange={e => setForm(f => ({ ...f, synopsis: e.target.value }))} />
-              </div>
-              <div className="flex items-center gap-2 col-span-2">
-                <input id="free-ep" type="checkbox" className="w-4 h-4 accent-violet-600" checked={form.is_free} onChange={e => setForm(f => ({ ...f, is_free: e.target.checked }))} />
-                <label htmlFor="free-ep" className="text-sm text-gray-300 cursor-pointer">Épisode gratuit</label>
-              </div>
             </div>
 
-            <div className="border-t border-gray-800 pt-4">
+            <div className="border-t border-gray-800 pt-4 space-y-4">
               <ImageUpload
-                label="Miniature de l'épisode (16:9)"
+                label="Miniature (16:9)"
                 aspect="banner"
                 value={form.thumbnail_url}
                 onChange={url => setForm(f => ({ ...f, thumbnail_url: url }))}
               />
-            </div>
-
-            <div className="border-t border-gray-800 pt-4">
               <VideoUpload
                 label="Fichier vidéo"
                 value={form.video_url}
@@ -288,8 +323,8 @@ export function EpisodesPage() {
                 }))}
               />
               {form.duration_sec > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Durée détectée : {Math.floor(form.duration_sec / 60)} min {form.duration_sec % 60} s
+                <p className="text-xs text-gray-500">
+                  Durée : {Math.floor(form.duration_sec / 60)} min {form.duration_sec % 60} s
                 </p>
               )}
             </div>

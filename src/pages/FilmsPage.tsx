@@ -4,8 +4,9 @@ import { contentService } from '@/services/content.service'
 import { Drawer } from '@/components/ui/Drawer'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { VideoUpload } from '@/components/ui/VideoUpload'
 import type { Content } from '@/types'
-import { Plus, Trash2, Globe, Edit2, Film } from 'lucide-react'
+import { Plus, Trash2, Globe, Edit2, Film, Lock } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_COLORS = {
@@ -14,11 +15,11 @@ const STATUS_COLORS = {
   archived: 'bg-red-500/15 text-red-400',
 }
 
-const EMPTY_FORM = {
-  title: '', original_title: '', year: new Date().getFullYear(), synopsis: '',
-  director: '', language: 'fr', country: '', rating: '',
-  thumbnail_url: '', banner_url: '', trailer_url: '',
+const EMPTY = {
+  title: '', year: new Date().getFullYear(), language: 'fr',
+  synopsis: '', thumbnail_url: '', banner_url: '', trailer_url: '',
   is_premium: false, price: '',
+  video_url: '', video_duration: 0,
 }
 
 export function FilmsPage() {
@@ -27,7 +28,7 @@ export function FilmsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Content | null>(null)
   const [toDelete, setToDelete] = useState<Content | null>(null)
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState(EMPTY)
 
   const { data, isLoading } = useQuery({
     queryKey: ['films', page],
@@ -35,18 +36,54 @@ export function FilmsPage() {
   })
 
   const mutCreate = useMutation({
-    mutationFn: () => contentService.createFilm({
-      ...form, year: Number(form.year),
-      price: form.price ? Number(form.price) : null,
-    }),
+    mutationFn: async () => {
+      const film = await contentService.createFilm({
+        title: form.title,
+        year: Number(form.year),
+        language: form.language,
+        synopsis: form.synopsis || undefined,
+        thumbnail_url: form.thumbnail_url || undefined,
+        banner_url: form.banner_url || undefined,
+        trailer_url: form.trailer_url || undefined,
+        is_premium: form.is_premium,
+        price: form.is_premium && form.price ? Number(form.price) : null,
+      })
+      if (form.video_url) {
+        await contentService.addFilmVideo(film.id, {
+          label: 'Version principale',
+          hls_url: form.video_url,
+          duration_sec: form.video_duration || undefined,
+          is_default: true,
+          is_free: !form.is_premium,
+        })
+      }
+      return film
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['films'] }); closeForm() },
   })
 
   const mutUpdate = useMutation({
-    mutationFn: () => contentService.updateFilm(editing!.id, {
-      ...form, year: Number(form.year),
-      price: form.price ? Number(form.price) : null,
-    }),
+    mutationFn: async () => {
+      const film = await contentService.updateFilm(editing!.id, {
+        title: form.title,
+        synopsis: form.synopsis || undefined,
+        thumbnail_url: form.thumbnail_url || undefined,
+        banner_url: form.banner_url || undefined,
+        trailer_url: form.trailer_url || undefined,
+        is_premium: form.is_premium,
+        price: form.is_premium && form.price ? Number(form.price) : null,
+      })
+      if (form.video_url) {
+        await contentService.addFilmVideo(editing!.id, {
+          label: 'Version principale',
+          hls_url: form.video_url,
+          duration_sec: form.video_duration || undefined,
+          is_default: true,
+          is_free: !form.is_premium,
+        })
+      }
+      return film
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['films'] }); closeForm() },
   })
 
@@ -60,30 +97,22 @@ export function FilmsPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['films'] }); setToDelete(null) },
   })
 
-  function openCreate() {
-    setEditing(null); setForm(EMPTY_FORM); setShowForm(true)
-  }
+  function openCreate() { setEditing(null); setForm(EMPTY); setShowForm(true) }
 
-  function openEdit(film: Content) {
-    setEditing(film)
+  function openEdit(f: Content) {
+    setEditing(f)
     setForm({
-      title: film.title, original_title: film.original_title ?? '',
-      year: film.year, synopsis: film.synopsis ?? '',
-      director: film.director ?? '', language: film.language,
-      country: film.country ?? '', rating: film.rating ?? '',
-      thumbnail_url: film.thumbnail_url ?? '', banner_url: film.banner_url ?? '',
-      trailer_url: film.trailer_url ?? '', is_premium: film.is_premium,
-      price: film.price != null ? String(film.price) : '',
+      title: f.title, year: f.year, language: f.language,
+      synopsis: f.synopsis ?? '',
+      thumbnail_url: f.thumbnail_url ?? '', banner_url: f.banner_url ?? '',
+      trailer_url: f.trailer_url ?? '',
+      is_premium: f.is_premium, price: f.price != null ? String(f.price) : '',
+      video_url: '', video_duration: 0,
     })
     setShowForm(true)
   }
 
   function closeForm() { setShowForm(false); setEditing(null) }
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
-    editing ? mutUpdate.mutate() : mutCreate.mutate()
-  }
 
   const films = data?.items ?? []
   const totalPages = data ? Math.ceil(data.total / 20) : 1
@@ -130,8 +159,13 @@ export function FilmsPage() {
                         </div>
                       )}
                       <div>
-                        <p className="text-gray-100 font-medium">{film.title}</p>
-                        {film.director && <p className="text-gray-500 text-xs">{film.director}</p>}
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-gray-100 font-medium">{film.title}</p>
+                          {film.is_premium && <Lock className="w-3 h-3 text-amber-400" />}
+                        </div>
+                        {film.is_premium && film.price != null && (
+                          <p className="text-xs text-amber-400/70">{film.price} €</p>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -172,75 +206,105 @@ export function FilmsPage() {
 
       {showForm && (
         <Drawer title={editing ? 'Modifier le film' : 'Ajouter un film'} onClose={closeForm}>
-          <form onSubmit={submit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
+          <form onSubmit={e => { e.preventDefault(); editing ? mutUpdate.mutate() : mutCreate.mutate() }} className="space-y-5">
+
+            {/* Infos de base */}
+            <div className="space-y-3">
+              <div>
                 <label className="label">Titre *</label>
-                <input required className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                <input required className="input" placeholder="Titre du film" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Année *</label>
+                  <input required type="number" min="1888" max="2099" className="input" value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} />
+                </div>
+                <div>
+                  <label className="label">Langue</label>
+                  <select className="input" value={form.language} onChange={e => setForm(f => ({ ...f, language: e.target.value }))}>
+                    <option value="fr">Français</option>
+                    <option value="en">Anglais</option>
+                    <option value="es">Espagnol</option>
+                    <option value="ar">Arabe</option>
+                    <option value="wo">Wolof</option>
+                    <option value="bm">Bambara</option>
+                    <option value="ha">Haoussa</option>
+                    <option value="sw">Swahili</option>
+                  </select>
+                </div>
               </div>
               <div>
-                <label className="label">Titre original</label>
-                <input className="input" value={form.original_title} onChange={e => setForm(f => ({ ...f, original_title: e.target.value }))} />
-              </div>
-              <div>
-                <label className="label">Année *</label>
-                <input required type="number" min="1888" max="2099" className="input" value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} />
-              </div>
-              <div>
-                <label className="label">Langue</label>
-                <input className="input" value={form.language} onChange={e => setForm(f => ({ ...f, language: e.target.value }))} />
-              </div>
-              <div>
-                <label className="label">Pays</label>
-                <input className="input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} />
-              </div>
-              <div>
-                <label className="label">Réalisateur</label>
-                <input className="input" value={form.director} onChange={e => setForm(f => ({ ...f, director: e.target.value }))} />
-              </div>
-              <div>
-                <label className="label">Classification</label>
-                <input className="input" placeholder="PG-13, R…" value={form.rating} onChange={e => setForm(f => ({ ...f, rating: e.target.value }))} />
-              </div>
-              <div className="col-span-2">
                 <label className="label">Synopsis</label>
-                <textarea rows={3} className="input resize-none" value={form.synopsis} onChange={e => setForm(f => ({ ...f, synopsis: e.target.value }))} />
+                <textarea rows={3} className="input resize-none" placeholder="Description du film…" value={form.synopsis} onChange={e => setForm(f => ({ ...f, synopsis: e.target.value }))} />
               </div>
             </div>
 
             {/* Images */}
-            <div className="border-t border-gray-800 pt-4 grid grid-cols-2 gap-4">
-              <ImageUpload
-                label="Miniature (poster)"
-                aspect="poster"
-                value={form.thumbnail_url}
-                onChange={url => setForm(f => ({ ...f, thumbnail_url: url }))}
-              />
-              <ImageUpload
-                label="Bannière"
-                aspect="banner"
-                value={form.banner_url}
-                onChange={url => setForm(f => ({ ...f, banner_url: url }))}
-              />
+            <div className="border-t border-gray-800 pt-4 space-y-4">
+              <ImageUpload label="Poster" aspect="poster" value={form.thumbnail_url} onChange={url => setForm(f => ({ ...f, thumbnail_url: url }))} />
+              <ImageUpload label="Bannière" aspect="banner" value={form.banner_url} onChange={url => setForm(f => ({ ...f, banner_url: url }))} />
             </div>
 
+            {/* Vidéo principale */}
             <div>
-              <label className="label">URL Trailer (YouTube, Vimeo…)</label>
-              <input className="input" placeholder="https://youtube.com/…" value={form.trailer_url} onChange={e => setForm(f => ({ ...f, trailer_url: e.target.value }))} />
+              <VideoUpload
+                label="Vidéo du film"
+                value={form.video_url}
+                onChange={(url, thumbUrl, dur) => setForm(f => ({
+                  ...f,
+                  video_url: url,
+                  thumbnail_url: thumbUrl && !f.thumbnail_url ? thumbUrl : f.thumbnail_url,
+                  video_duration: dur ?? f.video_duration,
+                }))}
+              />
+              {form.video_duration > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Durée : {Math.floor(form.video_duration / 60)} min {form.video_duration % 60} s
+                </p>
+              )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <input id="premium-f" type="checkbox" className="w-4 h-4 accent-violet-600" checked={form.is_premium} onChange={e => setForm(f => ({ ...f, is_premium: e.target.checked }))} />
-              <label htmlFor="premium-f" className="text-sm text-gray-300 cursor-pointer">Contenu premium</label>
+            {/* Trailer */}
+            <div>
+              <label className="label">Lien Trailer (YouTube, Vimeo…)</label>
+              <input className="input" placeholder="https://youtube.com/watch?v=…" value={form.trailer_url} onChange={e => setForm(f => ({ ...f, trailer_url: e.target.value }))} />
+            </div>
+
+            {/* Premium */}
+            <div className="border-t border-gray-800 pt-4">
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, is_premium: !f.is_premium, price: '' }))}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors text-sm font-medium',
+                  form.is_premium
+                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
+                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'
+                )}
+              >
+                <Lock className="w-4 h-4" />
+                <span className="flex-1 text-left">Contenu premium</span>
+                <div className={clsx('w-9 h-5 rounded-full transition-colors relative', form.is_premium ? 'bg-amber-500' : 'bg-gray-600')}>
+                  <div className={clsx('absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all', form.is_premium ? 'left-4' : 'left-0.5')} />
+                </div>
+              </button>
               {form.is_premium && (
-                <input type="number" min="0" step="0.01" className="input w-28 ml-2" placeholder="Prix €" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
+                <div className="mt-3">
+                  <label className="label">Prix d'achat (€)</label>
+                  <input
+                    type="number" min="0" step="0.01" className="input"
+                    placeholder="ex: 4.99"
+                    value={form.price}
+                    onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                  />
+                </div>
               )}
             </div>
 
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-800">
               <button type="button" onClick={closeForm} className="btn-ghost">Annuler</button>
               <button type="submit" disabled={isPending} className="btn-primary">
-                {isPending ? 'Enregistrement…' : editing ? 'Mettre à jour' : 'Créer'}
+                {isPending ? 'Enregistrement…' : editing ? 'Mettre à jour' : 'Créer le film'}
               </button>
             </div>
           </form>

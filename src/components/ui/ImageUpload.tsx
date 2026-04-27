@@ -9,12 +9,6 @@ interface ImageUploadProps {
   aspect?: 'poster' | 'banner' | 'square'
 }
 
-const ASPECT_CLASSES = {
-  poster: 'aspect-[2/3] w-32',
-  banner: 'aspect-video w-full',
-  square: 'aspect-square w-32',
-}
-
 export function ImageUpload({ value, onChange, label, aspect = 'poster' }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -29,62 +23,64 @@ export function ImageUpload({ value, onChange, label, aspect = 'poster' }: Image
       const result = await uploadImage(file, 'content')
       onChange(result.url)
     } catch {
-      setError('Échec de l\'upload')
+      setError("Échec de l'upload")
     } finally {
       setLoading(false)
       if (inputRef.current) inputRef.current.value = ''
     }
   }
 
-  return (
-    <div>
-      {label && <label className="label">{label}</label>}
-      <div className="flex items-start gap-3">
-        {/* Preview */}
-        <div
-          className={`${ASPECT_CLASSES[aspect]} bg-gray-800 border border-gray-700 rounded-lg overflow-hidden flex items-center justify-center shrink-0 relative`}
-        >
-          {value ? (
-            <>
-              <img src={value} alt="" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={() => onChange('')}
-                className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </>
-          ) : (
-            <ImageIcon className="w-6 h-6 text-gray-600" />
-          )}
-          {loading && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-        </div>
+  const previewClass = aspect === 'poster'
+    ? 'aspect-[2/3] max-h-40'
+    : aspect === 'banner'
+    ? 'aspect-video'
+    : 'aspect-square max-h-40'
 
-        {/* Bouton + champ URL manuel */}
-        <div className="flex-1 space-y-2">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={loading}
-            className="btn-ghost text-xs py-1.5 w-full justify-center"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            {loading ? 'Upload…' : 'Choisir un fichier'}
-          </button>
-          <input
-            className="input text-xs"
-            placeholder="ou coller une URL…"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-          />
-          {error && <p className="text-xs text-red-400">{error}</p>}
-        </div>
+  return (
+    <div className="space-y-2">
+      {label && <label className="label">{label}</label>}
+
+      {/* Zone de preview / drop */}
+      <div
+        className={`w-full ${previewClass} bg-gray-800 border border-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center cursor-pointer group`}
+        onClick={() => !loading && inputRef.current?.click()}
+      >
+        {value ? (
+          <>
+            <img src={value} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+              <Upload className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onChange('') }}
+              className="absolute top-2 right-2 w-6 h-6 bg-black/70 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-gray-500 group-hover:text-gray-400 transition-colors">
+            <ImageIcon className="w-8 h-8" />
+            <span className="text-xs">Cliquer pour choisir</span>
+          </div>
+        )}
+        {loading && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </div>
+
+      {/* URL manuelle */}
+      <input
+        className="input text-xs"
+        placeholder="ou coller une URL d'image…"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+      {error && <p className="text-xs text-red-400">{error}</p>}
+
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   )

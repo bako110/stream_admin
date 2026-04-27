@@ -210,25 +210,27 @@ export function SeasonsPage() {
           onClose={closeForm}
         >
           <form onSubmit={e => { e.preventDefault(); editing ? mutUpdate.mutate() : mutCreate.mutate() }} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Numéro *</label>
-                <input
-                  required type="number" min="1" className="input"
-                  value={form.number}
-                  onChange={e => setForm(f => ({ ...f, number: Number(e.target.value) }))}
-                  disabled={!!editing}
-                />
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Numéro *</label>
+                  <input
+                    required type="number" min="1" className="input"
+                    value={form.number}
+                    onChange={e => setForm(f => ({ ...f, number: Number(e.target.value) }))}
+                    disabled={!!editing}
+                  />
+                </div>
+                <div>
+                  <label className="label">Année</label>
+                  <input
+                    type="number" min="1888" max="2099" className="input"
+                    value={form.year}
+                    onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))}
+                  />
+                </div>
               </div>
               <div>
-                <label className="label">Année</label>
-                <input
-                  type="number" min="1888" max="2099" className="input"
-                  value={form.year}
-                  onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))}
-                />
-              </div>
-              <div className="col-span-2">
                 <label className="label">Titre (optionnel)</label>
                 <input
                   className="input" placeholder="ex: La résurrection"
@@ -236,7 +238,7 @@ export function SeasonsPage() {
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 />
               </div>
-              <div className="col-span-2">
+              <div>
                 <label className="label">Synopsis</label>
                 <textarea
                   rows={3} className="input resize-none"

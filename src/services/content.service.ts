@@ -1,5 +1,5 @@
 import api from '@/lib/api'
-import type { Content, ContentListResponse, DashboardStats, Episode, Season } from '@/types'
+import type { Content, ContentListResponse, DashboardStats, Episode, Season, VideoMeta } from '@/types'
 
 export const contentService = {
   async getDashboard(): Promise<DashboardStats> {
@@ -117,5 +117,20 @@ export const contentService = {
 
   async deleteEpisode(episodeId: string): Promise<void> {
     await api.delete(`/episodes/${episodeId}`)
+  },
+
+  // ── Vidéos film ──────────────────────────────────────────────────────────────
+  async getFilmVideos(contentId: string): Promise<VideoMeta[]> {
+    const { data } = await api.get<VideoMeta[]>(`/content/${contentId}/videos`)
+    return data
+  },
+
+  async addFilmVideo(contentId: string, payload: { label: string; hls_url: string; duration_sec?: number; is_default?: boolean; is_free?: boolean }): Promise<VideoMeta> {
+    const { data } = await api.post<VideoMeta>(`/content/${contentId}/videos`, payload)
+    return data
+  },
+
+  async deleteFilmVideo(videoId: string): Promise<void> {
+    await api.delete(`/videos/${videoId}`)
   },
 }

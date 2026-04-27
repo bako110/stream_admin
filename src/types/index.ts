@@ -79,6 +79,20 @@ export interface Season {
   created_at: string
 }
 
+export interface VideoMeta {
+  id: string
+  content_id: string | null
+  episode_id: string | null
+  label: string
+  is_default: boolean
+  is_free: boolean
+  hls_url: string | null
+  duration_sec: number | null
+  transcode_status: string
+  transcode_progress: number
+  created_at: string
+}
+
 export interface DashboardStats {
   users: number
   contents: number
