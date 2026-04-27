@@ -8,7 +8,7 @@ export const usersService = {
   },
 
   async reviewVerification(userId: string, action: 'approve' | 'reject', note?: string): Promise<User> {
-    const { data } = await api.patch<User>(`/users/${userId}/verify`, { action, note })
+    const { data } = await api.patch<User>(`/users/${userId}/verify`, { approved: action === 'approve', note })
     return data
   },
 
