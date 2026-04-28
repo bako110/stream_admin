@@ -29,11 +29,11 @@ api.interceptors.response.use(
           return api.request(error.config)
         } catch {
           localStorage.clear()
-          window.location.href = '/login'
+          window.location.href = '/admin/login'
         }
       } else {
         localStorage.clear()
-        window.location.href = '/login'
+        window.location.href = '/admin/login'
       }
     }
     return Promise.reject(error)
