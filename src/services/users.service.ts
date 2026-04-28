@@ -45,6 +45,10 @@ export const usersService = {
     return data
   },
 
+  async deleteContent(userId: string, contentType: 'reel' | 'event' | 'concert', contentId: string): Promise<void> {
+    await api.delete(`/users/${userId}/admin/content/${contentType}/${contentId}`)
+  },
+
   async createManager(payload: {
     first_name: string
     last_name: string

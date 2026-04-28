@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersService } from '@/services/users.service'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { User } from '@/types'
-import { X, Search, Film, Music, Video, Eye, Calendar } from 'lucide-react'
+import { X, Search, Film, Music, Video, Eye, Calendar, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 
 type TabType = 'all' | 'reels' | 'events' | 'concerts'
@@ -20,9 +21,11 @@ interface Props {
 }
 
 export function UserContentDrawer({ user, onClose }: Props) {
+  const qc = useQueryClient()
   const [search, setSearch]   = useState('')
   const [tab, setTab]         = useState<TabType>('all')
   const [debouncedQ, setDebouncedQ] = useState('')
+  const [confirm, setConfirm] = useState<{ type: 'reel' | 'event' | 'concert'; id: string; label: string } | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(search), 400)
@@ -33,6 +36,18 @@ export function UserContentDrawer({ user, onClose }: Props) {
     queryKey: ['user-content', user.id, debouncedQ, tab],
     queryFn: () => usersService.getUserContent(user.id, debouncedQ || undefined, tab === 'all' ? undefined : tab),
   })
+
+  const mutDelete = useMutation({
+    mutationFn: ({ type, id }: { type: 'reel' | 'event' | 'concert'; id: string }) =>
+      usersService.deleteContent(user.id, type, id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['user-content', user.id] }),
+  })
+
+  function handleConfirmDelete() {
+    if (!confirm) return
+    mutDelete.mutate({ type: confirm.type, id: confirm.id })
+    setConfirm(null)
+  }
 
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || user.email
   const totalItems = (data?.reels.length ?? 0) + (data?.events.length ?? 0) + (data?.concerts.length ?? 0)
@@ -119,11 +134,19 @@ export function UserContentDrawer({ user, onClose }: Props) {
                             <Video className="w-6 h-6 text-gray-600" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-                          <p className="text-white text-xs line-clamp-2">{r.caption ?? '—'}</p>
-                          <p className="text-gray-300 text-xs flex items-center gap-1 mt-1">
-                            <Eye className="w-3 h-3" /> {r.views_count}
-                          </p>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                          <button
+                            onClick={() => setConfirm({ type: 'reel', id: r.id, label: `Supprimer ce reel ?` })}
+                            className="self-end p-1 rounded-md bg-red-500/80 hover:bg-red-500 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-white" />
+                          </button>
+                          <div>
+                            <p className="text-white text-xs line-clamp-2">{r.caption ?? '—'}</p>
+                            <p className="text-gray-300 text-xs flex items-center gap-1 mt-1">
+                              <Eye className="w-3 h-3" /> {r.views_count}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -139,7 +162,7 @@ export function UserContentDrawer({ user, onClose }: Props) {
                   </h3>
                   <div className="space-y-2">
                     {data!.events.map(e => (
-                      <div key={e.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                      <div key={e.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg group">
                         {e.banner_url ? (
                           <img src={e.banner_url} alt="" className="w-12 h-12 rounded object-cover shrink-0" />
                         ) : (
@@ -152,6 +175,12 @@ export function UserContentDrawer({ user, onClose }: Props) {
                           <p className="text-gray-500 text-xs">{e.starts_at ? new Date(e.starts_at).toLocaleDateString('fr-FR') : '—'}</p>
                         </div>
                         <StatusBadge status={e.status} />
+                        <button
+                          onClick={() => setConfirm({ type: 'event', id: e.id, label: `Supprimer l'événement "${e.title}" ?` })}
+                          className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -166,7 +195,7 @@ export function UserContentDrawer({ user, onClose }: Props) {
                   </h3>
                   <div className="space-y-2">
                     {data!.concerts.map(c => (
-                      <div key={c.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                      <div key={c.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg group">
                         {c.banner_url ? (
                           <img src={c.banner_url} alt="" className="w-12 h-12 rounded object-cover shrink-0" />
                         ) : (
@@ -179,6 +208,12 @@ export function UserContentDrawer({ user, onClose }: Props) {
                           <p className="text-gray-500 text-xs">{c.starts_at ? new Date(c.starts_at).toLocaleDateString('fr-FR') : '—'}</p>
                         </div>
                         <StatusBadge status={c.status} />
+                        <button
+                          onClick={() => setConfirm({ type: 'concert', id: c.id, label: `Supprimer le concert "${c.title}" ?` })}
+                          className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -188,6 +223,16 @@ export function UserContentDrawer({ user, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {confirm && (
+        <ConfirmDialog
+          title="Supprimer le contenu"
+          message={confirm.label}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirm(null)}
+          danger
+        />
+      )}
     </div>
   )
 }
