@@ -1,5 +1,29 @@
 export type UserRole = 'user' | 'artist' | 'admin'
 
+export type ReportContentType = 'reel' | 'event' | 'concert' | 'comment'
+export type ReportReason = 'spam' | 'inappropriate' | 'violence' | 'harassment' | 'misinformation' | 'other'
+export type ReportStatus = 'pending' | 'resolved' | 'dismissed'
+
+export interface Report {
+  id: string
+  content_type: ReportContentType
+  content_id: string
+  reason: ReportReason
+  details: string | null
+  status: ReportStatus
+  created_at: string
+  resolved_at: string | null
+  reporter: { id: string; email: string; username: string | null }
+  content_preview: { title: string; thumbnail_url: string | null; url: string | null } | null
+}
+
+export interface ReportListResponse {
+  items: Report[]
+  total: number
+  page: number
+  limit: number
+}
+
 export interface UserReel {
   id: string
   caption: string | null
