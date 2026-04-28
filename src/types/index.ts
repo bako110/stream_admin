@@ -51,10 +51,20 @@ export interface UserConcert {
   created_at: string | null
 }
 
+export interface UserComment {
+  id: string
+  body: string
+  reel_id: string | null
+  event_id: string | null
+  concert_id: string | null
+  created_at: string | null
+}
+
 export interface UserContent {
   reels: UserReel[]
   events: UserEvent[]
   concerts: UserConcert[]
+  comments: UserComment[]
 }
 export type VerificationStatus = 'none' | 'pending' | 'approved' | 'rejected'
 
