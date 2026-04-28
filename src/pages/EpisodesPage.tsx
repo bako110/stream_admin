@@ -216,8 +216,8 @@ export function EpisodesPage() {
                         ) : (
                           <div className="w-16 h-9 rounded bg-gray-800" />
                         )}
-                        <div>
-                          <p className="text-gray-100 font-medium">{ep.title}</p>
+                        <div className="min-w-0">
+                          <p className="text-gray-100 font-medium truncate max-w-xs">{ep.title}</p>
                           {ep.synopsis && <p className="text-gray-500 text-xs truncate max-w-xs">{ep.synopsis}</p>}
                         </div>
                       </div>
@@ -301,7 +301,7 @@ export function EpisodesPage() {
               </div>
               <div>
                 <label className="label">Titre *</label>
-                <input required className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                <input required maxLength={200} className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Ex: Le Retour du Dragon" />
               </div>
             </div>
 
