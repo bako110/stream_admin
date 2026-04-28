@@ -14,7 +14,14 @@ export interface Report {
   created_at: string
   resolved_at: string | null
   reporter: { id: string; email: string; username: string | null }
-  content_preview: { title: string; thumbnail_url: string | null; url: string | null } | null
+  content_preview: {
+    title: string
+    thumbnail_url: string | null
+    url: string | null
+    is_blocked: boolean
+    description: string | null
+    created_at: string | null
+  } | null
 }
 
 export interface ReportListResponse {

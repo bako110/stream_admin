@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { reportsService } from '@/services/reports.service'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ReportDetailDrawer } from '@/components/ui/ReportDetailDrawer'
 import type { Report, ReportContentType } from '@/types'
-import { Trash2, CheckCircle, RefreshCw, Video, Calendar, Music, MessageSquare } from 'lucide-react'
+import { Trash2, CheckCircle, RefreshCw, Video, Calendar, Music, MessageSquare, ShieldBan } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_TABS = [
@@ -32,6 +33,7 @@ const CONTENT_TYPE_ICON: Record<ReportContentType, typeof Video> = {
 export function ReportsPage() {
   const qc = useQueryClient()
   const [statusTab, setStatusTab] = useState('pending')
+  const [selected, setSelected] = useState<Report | null>(null)
   const [confirm, setConfirm] = useState<{ reportId: string; action: 'delete' | 'dismiss'; label: string } | null>(null)
 
   const { data, isLoading, refetch } = useQuery({
@@ -39,20 +41,23 @@ export function ReportsPage() {
     queryFn: () => reportsService.list(statusTab),
   })
 
+  const mutBlock = useMutation({
+    mutationFn: (id: string) => reportsService.blockContent(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['reports'] }); setSelected(null) },
+  })
   const mutDelete = useMutation({
     mutationFn: (id: string) => reportsService.deleteContent(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['reports'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['reports'] }); setSelected(null); setConfirm(null) },
   })
   const mutDismiss = useMutation({
     mutationFn: (id: string) => reportsService.dismiss(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['reports'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['reports'] }); setSelected(null); setConfirm(null) },
   })
 
   function handleConfirm() {
     if (!confirm) return
     if (confirm.action === 'delete') mutDelete.mutate(confirm.reportId)
     if (confirm.action === 'dismiss') mutDismiss.mutate(confirm.reportId)
-    setConfirm(null)
   }
 
   const items = data?.items ?? []
@@ -98,6 +103,7 @@ export function ReportsPage() {
             <ReportRow
               key={report.id}
               report={report}
+              onClick={() => setSelected(report)}
               onDelete={() => setConfirm({
                 reportId: report.id,
                 action: 'delete',
@@ -117,6 +123,20 @@ export function ReportsPage() {
         <p className="text-xs text-gray-500">{data.total} signalement{data.total !== 1 ? 's' : ''}</p>
       )}
 
+      {/* Drawer détail */}
+      {selected && (
+        <ReportDetailDrawer
+          report={selected}
+          onClose={() => setSelected(null)}
+          onBlock={() => mutBlock.mutate(selected.id)}
+          onDelete={() => setConfirm({ reportId: selected.id, action: 'delete', label: `Supprimer définitivement ce contenu (${selected.content_type}) ?` })}
+          onDismiss={() => setConfirm({ reportId: selected.id, action: 'dismiss', label: 'Ignorer ce signalement ?' })}
+          isBlocking={mutBlock.isPending}
+          isDeleting={mutDelete.isPending}
+          isDismissing={mutDismiss.isPending}
+        />
+      )}
+
       {confirm && (
         <ConfirmDialog
           title="Confirmer l'action"
@@ -132,15 +152,20 @@ export function ReportsPage() {
 
 interface ReportRowProps {
   report: Report
+  onClick: () => void
   onDelete: () => void
   onDismiss: () => void
 }
 
-function ReportRow({ report, onDelete, onDismiss }: ReportRowProps) {
+function ReportRow({ report, onClick, onDelete, onDismiss }: ReportRowProps) {
   const Icon = CONTENT_TYPE_ICON[report.content_type]
+  const isBlocked = report.content_preview?.is_blocked ?? false
 
   return (
-    <div className="flex items-start gap-4 p-4 hover:bg-gray-800/30 transition-colors">
+    <div
+      className="flex items-start gap-4 p-4 hover:bg-gray-800/30 transition-colors cursor-pointer"
+      onClick={onClick}
+    >
       {/* Thumbnail ou icône */}
       <div className="w-16 h-16 rounded-lg bg-gray-800 overflow-hidden shrink-0 flex items-center justify-center">
         {report.content_preview?.thumbnail_url ? (
@@ -161,6 +186,11 @@ function ReportRow({ report, onDelete, onDismiss }: ReportRowProps) {
           })}>
             {report.status}
           </span>
+          {isBlocked && (
+            <span className="flex items-center gap-1 text-xs text-red-400 font-medium">
+              <ShieldBan className="w-3 h-3" /> Bloqué
+            </span>
+          )}
         </div>
 
         <p className="text-gray-100 text-sm font-medium truncate">
@@ -175,9 +205,9 @@ function ReportRow({ report, onDelete, onDismiss }: ReportRowProps) {
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Actions rapides — stoppe la propagation pour ne pas ouvrir le drawer */}
       {report.status === 'pending' && (
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
           <button
             onClick={onDismiss}
             title="Ignorer"

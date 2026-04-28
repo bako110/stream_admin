@@ -16,4 +16,8 @@ export const reportsService = {
   async dismiss(reportId: string): Promise<void> {
     await api.patch(`/reports/admin/${reportId}/dismiss`)
   },
+
+  async blockContent(reportId: string): Promise<void> {
+    await api.patch(`/reports/admin/${reportId}/block`)
+  },
 }
