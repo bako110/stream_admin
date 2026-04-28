@@ -29,8 +29,11 @@ export async function uploadVideo(
     const form = new FormData()
     form.append('file', file)
 
+    // Bypasse le proxy Vite pour les gros fichiers vidéo — le proxy Node.js
+    // coupe les connexions sur les uploads > ~100 MB (ERR_CONNECTION_RESET)
+    const directBase = import.meta.env.VITE_API_DIRECT_URL ?? ''
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `/api/v1/upload/video?folder=${folder}`)
+    xhr.open('POST', `${directBase}/api/v1/upload/video?folder=${folder}`)
 
     const token = localStorage.getItem('access_token')
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)

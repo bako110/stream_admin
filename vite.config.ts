@@ -18,6 +18,15 @@ export default defineConfig({
         changeOrigin: true,
         timeout: 7200000,
         proxyTimeout: 7200000,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            console.error('[proxy error]', err.message)
+            if (!res.headersSent) {
+              (res as import('http').ServerResponse).writeHead(502)
+              res.end('Proxy error: ' + err.message)
+            }
+          })
+        },
       },
     },
   },
