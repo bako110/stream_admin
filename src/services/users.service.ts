@@ -1,5 +1,5 @@
 import api from '@/lib/api'
-import type { User, UserRole } from '@/types'
+import type { User, UserRole, UserContent } from '@/types'
 
 export const usersService = {
   async listPendingVerification(): Promise<User[]> {
@@ -35,6 +35,14 @@ export const usersService = {
 
   async delete(userId: string): Promise<void> {
     await api.delete(`/users/${userId}`)
+  },
+
+  async getUserContent(userId: string, q?: string, type?: string): Promise<UserContent> {
+    const params: Record<string, string> = {}
+    if (q) params.q = q
+    if (type) params.type = type
+    const { data } = await api.get<UserContent>(`/users/${userId}/admin/content`, { params })
+    return data
   },
 
   async createManager(payload: {

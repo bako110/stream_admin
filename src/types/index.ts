@@ -1,4 +1,37 @@
 export type UserRole = 'user' | 'artist' | 'admin'
+
+export interface UserReel {
+  id: string
+  caption: string | null
+  video_url: string | null
+  thumbnail_url: string | null
+  views_count: number
+  created_at: string | null
+}
+
+export interface UserEvent {
+  id: string
+  title: string
+  status: string
+  banner_url: string | null
+  starts_at: string | null
+  created_at: string | null
+}
+
+export interface UserConcert {
+  id: string
+  title: string
+  status: string
+  banner_url: string | null
+  starts_at: string | null
+  created_at: string | null
+}
+
+export interface UserContent {
+  reels: UserReel[]
+  events: UserEvent[]
+  concerts: UserConcert[]
+}
 export type VerificationStatus = 'none' | 'pending' | 'approved' | 'rejected'
 
 export interface User {

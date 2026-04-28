@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersService } from '@/services/users.service'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { UserContentDrawer } from '@/components/users/UserContentDrawer'
 import type { User, UserRole } from '@/types'
-import { UserCheck, UserX, Trash2, ShieldCheck, Search, RefreshCw } from 'lucide-react'
+import { UserCheck, UserX, Trash2, Search, RefreshCw, LayoutGrid } from 'lucide-react'
 import clsx from 'clsx'
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -18,7 +19,8 @@ export function UsersPage() {
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('')
-  const [confirm, setConfirm] = useState<{ action: string; userId: string; label: string } | null>(null)
+  const [confirm, setConfirm]         = useState<{ action: string; userId: string; label: string } | null>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['users', roleFilter],
@@ -118,6 +120,7 @@ export function UsersPage() {
                 filtered.map(user => <UserRow
                   key={user.id}
                   user={user}
+                  onViewContent={() => setSelectedUser(user)}
                   onActivate={() => setConfirm({ action: 'activate', userId: user.id, label: `Activer ${user.email}` })}
                   onDeactivate={() => setConfirm({ action: 'deactivate', userId: user.id, label: `Désactiver ${user.email}` })}
                   onDelete={() => setConfirm({ action: 'delete', userId: user.id, label: `Supprimer définitivement ${user.email}` })}
@@ -143,19 +146,24 @@ export function UsersPage() {
           danger={confirm.action === 'delete'}
         />
       )}
+
+      {selectedUser && (
+        <UserContentDrawer user={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
     </div>
   )
 }
 
 interface UserRowProps {
   user: User
+  onViewContent: () => void
   onActivate: () => void
   onDeactivate: () => void
   onDelete: () => void
   onRoleChange: (role: UserRole) => void
 }
 
-function UserRow({ user, onActivate, onDeactivate, onDelete, onRoleChange }: UserRowProps) {
+function UserRow({ user, onViewContent, onActivate, onDeactivate, onDelete, onRoleChange }: UserRowProps) {
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || '—'
 
   return (
@@ -192,6 +200,9 @@ function UserRow({ user, onActivate, onDeactivate, onDelete, onRoleChange }: Use
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1 justify-end">
+          <button onClick={onViewContent} title="Voir le contenu" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
+            <LayoutGrid className="w-4 h-4" />
+          </button>
           {user.is_active ? (
             <button onClick={onDeactivate} title="Désactiver" className="p-1.5 text-gray-400 hover:text-amber-400 transition-colors">
               <UserX className="w-4 h-4" />
