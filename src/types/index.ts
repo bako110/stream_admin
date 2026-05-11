@@ -67,11 +67,22 @@ export interface UserComment {
   created_at: string | null
 }
 
+export interface UserPost {
+  id: string
+  body: string | null
+  image_url: string | null
+  image_urls: string[] | null
+  like_count: number
+  comment_count: number
+  created_at: string | null
+}
+
 export interface UserContent {
   reels: UserReel[]
   events: UserEvent[]
   concerts: UserConcert[]
   comments: UserComment[]
+  posts: UserPost[]
 }
 export type VerificationStatus = 'none' | 'pending' | 'approved' | 'rejected'
 

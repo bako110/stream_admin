@@ -45,7 +45,7 @@ export const usersService = {
     return data
   },
 
-  async deleteContent(userId: string, contentType: 'reel' | 'event' | 'concert' | 'comment', contentId: string): Promise<void> {
+  async deleteContent(userId: string, contentType: 'reel' | 'event' | 'concert' | 'comment' | 'post', contentId: string): Promise<void> {
     await api.delete(`/users/${userId}/admin/content/${contentType}/${contentId}`)
   },
 
