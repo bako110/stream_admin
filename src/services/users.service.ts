@@ -1,6 +1,18 @@
 import api from '@/lib/api'
 import type { User, UserRole, UserContent } from '@/types'
 
+export interface CommunityVerifRequest {
+  id: string
+  status: 'pending' | 'approved' | 'rejected'
+  reason: string | null
+  coins_paid: number
+  review_note: string | null
+  created_at: string | null
+  reviewed_at: string | null
+  community: { id: string; name: string; avatar_url: string | null; members_count: number; is_verified: boolean } | null
+  requester: { id: string; username: string | null; display_name: string | null; avatar_url: string | null } | null
+}
+
 export const usersService = {
   async listPendingVerification(): Promise<User[]> {
     const { data } = await api.get<User[]>('/users', { params: { verification_status: 'pending', limit: 100 } })
@@ -47,6 +59,21 @@ export const usersService = {
 
   async deleteContent(userId: string, contentType: 'reel' | 'event' | 'concert' | 'comment' | 'post', contentId: string): Promise<void> {
     await api.delete(`/users/${userId}/admin/content/${contentType}/${contentId}`)
+  },
+
+  async listCommunityVerifications(status = 'pending'): Promise<CommunityVerifRequest[]> {
+    const { data } = await api.get<CommunityVerifRequest[]>('/communities/admin/verification-requests', { params: { status, limit: 100 } })
+    return data
+  },
+
+  async approveCommunityVerification(requestId: string, note?: string): Promise<CommunityVerifRequest> {
+    const { data } = await api.post<CommunityVerifRequest>(`/communities/admin/verification-requests/${requestId}/approve`, { note: note ?? null })
+    return data
+  },
+
+  async rejectCommunityVerification(requestId: string, note?: string): Promise<CommunityVerifRequest> {
+    const { data } = await api.post<CommunityVerifRequest>(`/communities/admin/verification-requests/${requestId}/reject`, { note: note ?? null })
+    return data
   },
 
   async createManager(payload: {
