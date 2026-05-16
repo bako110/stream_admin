@@ -5,9 +5,12 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY ?? ''
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  if (ADMIN_KEY) config.headers['X-Admin-Key'] = ADMIN_KEY
   // Laisse le navigateur définir Content-Type + boundary pour les FormData
   if (config.data instanceof FormData) {
     delete config.headers['Content-Type']

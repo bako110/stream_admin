@@ -57,8 +57,12 @@ export const usersService = {
     return data
   },
 
-  async deleteContent(userId: string, contentType: 'reel' | 'event' | 'concert' | 'comment' | 'post', contentId: string): Promise<void> {
+  async deleteContent(userId: string, contentType: 'reel' | 'event' | 'concert' | 'comment' | 'post' | 'live', contentId: string): Promise<void> {
     await api.delete(`/users/${userId}/admin/content/${contentType}/${contentId}`)
+  },
+
+  async stopLive(liveId: string): Promise<void> {
+    await api.post(`/admin/lives/${liveId}/stop`, null)
   },
 
   async listCommunityVerifications(status = 'pending'): Promise<CommunityVerifRequest[]> {

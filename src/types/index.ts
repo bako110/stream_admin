@@ -77,12 +77,23 @@ export interface UserPost {
   created_at: string | null
 }
 
+export interface UserLive {
+  id: string
+  title: string
+  status: string
+  current_viewers: number
+  peak_viewers: number
+  started_at: string
+  ended_at: string | null
+}
+
 export interface UserContent {
   reels: UserReel[]
   events: UserEvent[]
   concerts: UserConcert[]
   comments: UserComment[]
   posts: UserPost[]
+  lives: UserLive[]
 }
 export type VerificationStatus = 'none' | 'pending' | 'approved' | 'rejected'
 

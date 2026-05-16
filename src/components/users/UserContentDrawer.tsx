@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersService } from '@/services/users.service'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import type { User } from '@/types'
-import { X, Search, Film, Music, Video, Eye, Calendar, Trash2, MessageSquare, FileText, Heart } from 'lucide-react'
+import type { User, UserLive } from '@/types'
+import { X, Search, Film, Music, Video, Eye, Calendar, Trash2, MessageSquare, FileText, Heart, Radio, Square } from 'lucide-react'
 import clsx from 'clsx'
 
-type TabType = 'all' | 'reels' | 'events' | 'concerts' | 'comments' | 'posts'
+type TabType = 'all' | 'reels' | 'events' | 'concerts' | 'comments' | 'posts' | 'lives'
 
 const TABS: { key: TabType; label: string; icon: typeof Film }[] = [
   { key: 'all',      label: 'Tout',         icon: Film          },
@@ -15,6 +15,7 @@ const TABS: { key: TabType; label: string; icon: typeof Film }[] = [
   { key: 'events',   label: 'Événements',   icon: Calendar      },
   { key: 'concerts', label: 'Concerts',     icon: Music         },
   { key: 'comments', label: 'Commentaires', icon: MessageSquare },
+  { key: 'lives',    label: 'Lives',        icon: Radio         },
 ]
 
 interface Props {
@@ -27,7 +28,8 @@ export function UserContentDrawer({ user, onClose }: Props) {
   const [search, setSearch]   = useState('')
   const [tab, setTab]         = useState<TabType>('all')
   const [debouncedQ, setDebouncedQ] = useState('')
-  const [confirm, setConfirm] = useState<{ type: 'reel' | 'event' | 'concert' | 'comment' | 'post'; id: string; label: string } | null>(null)
+  const [confirm, setConfirm] = useState<{ type: 'reel' | 'event' | 'concert' | 'comment' | 'post' | 'live'; id: string; label: string } | null>(null)
+  const [stoppingLive, setStoppingLive] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(search), 400)
@@ -40,10 +42,20 @@ export function UserContentDrawer({ user, onClose }: Props) {
   })
 
   const mutDelete = useMutation({
-    mutationFn: ({ type, id }: { type: 'reel' | 'event' | 'concert' | 'comment' | 'post'; id: string }) =>
+    mutationFn: ({ type, id }: { type: 'reel' | 'event' | 'concert' | 'comment' | 'post' | 'live'; id: string }) =>
       usersService.deleteContent(user.id, type, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['user-content', user.id] }),
   })
+
+  async function handleStopLive(live: UserLive) {
+    setStoppingLive(live.id)
+    try {
+      await usersService.stopLive(live.id)
+      qc.invalidateQueries({ queryKey: ['user-content', user.id] })
+    } finally {
+      setStoppingLive(null)
+    }
+  }
 
   function handleConfirmDelete() {
     if (!confirm) return
@@ -52,7 +64,7 @@ export function UserContentDrawer({ user, onClose }: Props) {
   }
 
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || user.email
-  const totalItems = (data?.reels.length ?? 0) + (data?.events.length ?? 0) + (data?.concerts.length ?? 0) + (data?.comments.length ?? 0) + (data?.posts.length ?? 0)
+  const totalItems = (data?.reels.length ?? 0) + (data?.events.length ?? 0) + (data?.concerts.length ?? 0) + (data?.comments.length ?? 0) + (data?.posts.length ?? 0) + (data?.lives.length ?? 0)
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -280,6 +292,46 @@ export function UserContentDrawer({ user, onClose }: Props) {
                         </div>
                         <button
                           onClick={() => setConfirm({ type: 'comment', id: c.id, label: `Supprimer ce commentaire ?` })}
+                          className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Lives */}
+              {(data?.lives.length ?? 0) > 0 && (
+                <section>
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Radio className="w-3.5 h-3.5" /> Lives ({data!.lives.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {data!.lives.map(live => (
+                      <div key={live.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg group">
+                        <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center shrink-0">
+                          <Radio className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-100 text-sm font-medium truncate">{live.title || 'Sans titre'}</p>
+                          <p className="text-gray-500 text-xs flex items-center gap-2 mt-0.5">
+                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{live.current_viewers} spectateurs</span>
+                            <span>{new Date(live.started_at).toLocaleDateString('fr-FR')}</span>
+                          </p>
+                        </div>
+                        <span className="badge text-xs shrink-0 bg-red-500/15 text-red-400">En direct</span>
+                        <button
+                          onClick={() => handleStopLive(live)}
+                          disabled={stoppingLive === live.id}
+                          title="Arrêter le live"
+                          className="p-1.5 text-orange-400 hover:text-orange-300 transition-colors opacity-0 group-hover:opacity-100 shrink-0 disabled:opacity-50"
+                        >
+                          <Square className="w-4 h-4 fill-current" />
+                        </button>
+                        <button
+                          onClick={() => setConfirm({ type: 'live', id: live.id, label: `Supprimer le live "${live.title || 'Sans titre'}" ?` })}
                           className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
                         >
                           <Trash2 className="w-4 h-4" />
