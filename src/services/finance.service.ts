@@ -21,6 +21,13 @@ export interface Transaction {
   created_at: string
 }
 
+export interface TransactionDetail extends Transaction {
+  user_id: string | null
+  user: { id: string | null; email: string; name: string; username: string | null }
+  reference_id: string | null
+  updated_at: string | null
+}
+
 export interface TransactionList {
   total: number
   page: number
@@ -67,6 +74,11 @@ export const financeService = {
     const params: Record<string, unknown> = { page, limit }
     if (status) params.status = status
     const { data } = await api.get<WithdrawalList>('/finance/withdrawals', { params })
+    return data
+  },
+
+  async getTransactionDetail(id: string): Promise<TransactionDetail> {
+    const { data } = await api.get<TransactionDetail>(`/finance/transactions/${id}`)
     return data
   },
 
