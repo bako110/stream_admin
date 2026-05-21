@@ -14,6 +14,7 @@ import { ManagersPage } from '@/pages/ManagersPage'
 import { VerificationPage } from '@/pages/VerificationPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { CommunitiesPage } from '@/pages/CommunitiesPage'
+import { FinancePage } from '@/pages/FinancePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ export default function App() {
               <Route path="verification" element={<VerificationPage />} />
               <Route path="communities" element={<CommunitiesPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="finance" element={<FinancePage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
