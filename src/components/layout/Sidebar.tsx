@@ -19,10 +19,15 @@ const NAV_ADMIN = [
 ]
 
 const NAV_MANAGER = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/users', icon: Users, label: 'Utilisateurs' },
+  { to: '/communities', icon: UsersRound, label: 'Communautés' },
   { to: '/content/films', icon: Film, label: 'Films' },
   { to: '/content/series', icon: Tv, label: 'Séries' },
   { to: '/content/seasons', icon: Layers, label: 'Saisons' },
   { to: '/content/episodes', icon: ListVideo, label: 'Épisodes' },
+  { to: '/verification', icon: BadgeCheck, label: 'Vérifications' },
+  { to: '/reports', icon: Flag, label: 'Signalements' },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
