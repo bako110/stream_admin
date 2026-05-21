@@ -6,6 +6,7 @@ import { Drawer } from '@/components/ui/Drawer'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import type { Season } from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
 import { Plus, Trash2, Edit2, ChevronDown, ArrowLeft, ListVideo } from 'lucide-react'
 
 const EMPTY_FORM = {
@@ -15,6 +16,8 @@ const EMPTY_FORM = {
 export function SeasonsPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { user: me } = useAuth()
+  const isAdmin = me?.role === 'admin'
   const [searchParams] = useSearchParams()
   const paramSerieId = searchParams.get('serieId') ?? ''
   const paramTitle = searchParams.get('title') ?? ''
@@ -187,13 +190,15 @@ export function SeasonsPage() {
                         <button onClick={() => openEdit(s)} title="Modifier" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => setToDelete({ number: s.number, title: s.title ?? `Saison ${s.number}` })}
-                          title="Supprimer"
-                          className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setToDelete({ number: s.number, title: s.title ?? `Saison ${s.number}` })}
+                            title="Supprimer"
+                            className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersService } from '@/services/users.service'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { UserContentDrawer } from '@/components/users/UserContentDrawer'
+import { useAuth } from '@/contexts/AuthContext'
 import type { User, UserRole } from '@/types'
 import { UserCheck, UserX, Trash2, Search, RefreshCw, LayoutGrid } from 'lucide-react'
 import clsx from 'clsx'
@@ -25,6 +26,8 @@ const ROLES: UserRole[] = ['user', 'artist', 'manager', 'admin']
 
 export function UsersPage() {
   const qc = useQueryClient()
+  const { user: me } = useAuth()
+  const isAdmin = me?.role === 'admin'
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('')
   const [confirm, setConfirm]         = useState<{ action: string; userId: string; label: string } | null>(null)
@@ -128,6 +131,7 @@ export function UsersPage() {
                 filtered.map(user => <UserRow
                   key={user.id}
                   user={user}
+                  isAdmin={isAdmin}
                   onViewContent={() => setSelectedUser(user)}
                   onActivate={() => setConfirm({ action: 'activate', userId: user.id, label: `Activer ${user.email}` })}
                   onDeactivate={() => setConfirm({ action: 'deactivate', userId: user.id, label: `Désactiver ${user.email}` })}
@@ -164,6 +168,7 @@ export function UsersPage() {
 
 interface UserRowProps {
   user: User
+  isAdmin: boolean
   onViewContent: () => void
   onActivate: () => void
   onDeactivate: () => void
@@ -171,7 +176,7 @@ interface UserRowProps {
   onRoleChange: (role: UserRole) => void
 }
 
-function UserRow({ user, onViewContent, onActivate, onDeactivate, onDelete, onRoleChange }: UserRowProps) {
+function UserRow({ user, isAdmin, onViewContent, onActivate, onDeactivate, onDelete, onRoleChange }: UserRowProps) {
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || '—'
 
   return (
@@ -220,9 +225,11 @@ function UserRow({ user, onViewContent, onActivate, onDeactivate, onDelete, onRo
               <UserCheck className="w-4 h-4" />
             </button>
           )}
-          <button onClick={onDelete} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {isAdmin && (
+            <button onClick={onDelete} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </td>
     </tr>

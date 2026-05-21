@@ -4,6 +4,7 @@ import { reportsService } from '@/services/reports.service'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ReportDetailDrawer } from '@/components/ui/ReportDetailDrawer'
 import type { Report, ReportContentType } from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
 import { Trash2, CheckCircle, RefreshCw, Video, Calendar, Music, MessageSquare, ShieldBan } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -32,6 +33,8 @@ const CONTENT_TYPE_ICON: Record<ReportContentType, typeof Video> = {
 
 export function ReportsPage() {
   const qc = useQueryClient()
+  const { user: me } = useAuth()
+  const isAdmin = me?.role === 'admin'
   const [statusTab, setStatusTab] = useState('pending')
   const [selected, setSelected] = useState<Report | null>(null)
   const [confirm, setConfirm] = useState<{ reportId: string; action: 'delete' | 'dismiss'; label: string } | null>(null)
@@ -103,6 +106,7 @@ export function ReportsPage() {
             <ReportRow
               key={report.id}
               report={report}
+              isAdmin={isAdmin}
               onClick={() => setSelected(report)}
               onDelete={() => setConfirm({
                 reportId: report.id,
@@ -152,12 +156,13 @@ export function ReportsPage() {
 
 interface ReportRowProps {
   report: Report
+  isAdmin: boolean
   onClick: () => void
   onDelete: () => void
   onDismiss: () => void
 }
 
-function ReportRow({ report, onClick, onDelete, onDismiss }: ReportRowProps) {
+function ReportRow({ report, isAdmin, onClick, onDelete, onDismiss }: ReportRowProps) {
   const Icon = CONTENT_TYPE_ICON[report.content_type]
   const isBlocked = report.content_preview?.is_blocked ?? false
 
@@ -215,13 +220,15 @@ function ReportRow({ report, onClick, onDelete, onDismiss }: ReportRowProps) {
           >
             <CheckCircle className="w-4 h-4" />
           </button>
-          <button
-            onClick={onDelete}
-            title="Supprimer le contenu"
-            className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={onDelete}
+              title="Supprimer le contenu"
+              className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       )}
     </div>

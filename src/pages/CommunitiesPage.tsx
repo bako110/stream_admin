@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   Users, Search, RefreshCw, BadgeCheck, Lock, Unlock,
   Calendar, X, Shield, User, Zap, Trash2, Ban, ShieldOff,
@@ -51,6 +52,8 @@ type ConfirmAction = { type: 'delete' | 'block' | 'unblock'; community: Communit
 
 export function CommunitiesPage() {
   const qc = useQueryClient()
+  const { user: me } = useAuth()
+  const isAdmin = me?.role === 'admin'
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Community | null>(null)
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
@@ -304,13 +307,15 @@ export function CommunitiesPage() {
                       Bloquer la communauté
                     </button>
                   )}
-                  <button
-                    onClick={() => setConfirm({ type: 'delete', community: target })}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-400 text-sm font-medium transition-colors border border-red-500/20"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Supprimer définitivement
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setConfirm({ type: 'delete', community: target })}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-400 text-sm font-medium transition-colors border border-red-500/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Supprimer définitivement
+                    </button>
+                  )}
                 </div>
               </div>
             </>

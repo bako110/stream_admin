@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { VideoUpload } from '@/components/ui/VideoUpload'
 import type { Episode } from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
 import { Plus, Trash2, Edit2, ChevronDown, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -18,6 +19,8 @@ const EMPTY_FORM = {
 export function EpisodesPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { user: me } = useAuth()
+  const isAdmin = me?.role === 'admin'
   const [searchParams] = useSearchParams()
   const paramSerieId = searchParams.get('serieId') ?? ''
   const paramSeason = Number(searchParams.get('season') ?? '1')
@@ -236,9 +239,11 @@ export function EpisodesPage() {
                         <button onClick={() => openEdit(ep)} className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setToDelete(ep)} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {isAdmin && (
+                          <button onClick={() => setToDelete(ep)} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

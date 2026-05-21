@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/AuthContext'
 import { X, ShieldBan, Trash2, CheckCircle, Video, Calendar, Music, MessageSquare, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
 import type { Report, ReportContentType } from '@/types'
@@ -40,6 +41,8 @@ export function ReportDetailDrawer({
   report, onClose, onBlock, onDelete, onDismiss,
   isBlocking, isDeleting, isDismissing,
 }: Props) {
+  const { user: me } = useAuth()
+  const isAdmin = me?.role === 'admin'
   const Icon = CONTENT_TYPE_ICON[report.content_type]
   const preview = report.content_preview
   const isPending = report.status === 'pending'
@@ -166,14 +169,16 @@ export function ReportDetailDrawer({
                 {isBlocking ? 'Blocage…' : 'Bloquer le contenu'}
               </button>
             )}
-            <button
-              onClick={onDelete}
-              disabled={isDeleting}
-              className="w-full flex items-center justify-center gap-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white font-medium text-sm rounded-lg py-2.5 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              {isDeleting ? 'Suppression…' : 'Supprimer définitivement'}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={onDelete}
+                disabled={isDeleting}
+                className="w-full flex items-center justify-center gap-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white font-medium text-sm rounded-lg py-2.5 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                {isDeleting ? 'Suppression…' : 'Supprimer définitivement'}
+              </button>
+            )}
             <button
               onClick={onDismiss}
               disabled={isDismissing}
