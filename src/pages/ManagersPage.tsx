@@ -13,7 +13,7 @@ export function ManagersPage() {
 
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ['users', 'admin'],
-    queryFn: () => usersService.list(1, 100, 'admin'),
+    queryFn: () => usersService.list(1, 100, 'manager'),
   })
 
   const mutCreate = useMutation({

@@ -88,7 +88,7 @@ export const usersService = {
     username?: string
   }): Promise<User> {
     const { data } = await api.post<User>('/auth/register', payload)
-    await api.put(`/users/${data.id}/role`, null, { params: { role: 'admin' } })
+    await api.put(`/users/${data.id}/role`, null, { params: { role: 'manager' } })
     return data
   },
 }
