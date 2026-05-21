@@ -53,10 +53,12 @@ export const financeService = {
     return data
   },
 
-  async getTransactions(page = 1, limit = 50, type?: string, status?: string): Promise<TransactionList> {
+  async getTransactions(page = 1, limit = 50, type?: string, status?: string, transactionId?: string, userEmail?: string): Promise<TransactionList> {
     const params: Record<string, unknown> = { page, limit }
     if (type) params.tx_type = type
     if (status) params.status = status
+    if (transactionId) params.transaction_id = transactionId
+    if (userEmail) params.user_email = userEmail
     const { data } = await api.get<TransactionList>('/finance/transactions', { params })
     return data
   },
@@ -66,5 +68,17 @@ export const financeService = {
     if (status) params.status = status
     const { data } = await api.get<WithdrawalList>('/finance/withdrawals', { params })
     return data
+  },
+
+  async approveWithdrawal(id: string, note?: string): Promise<void> {
+    const params: Record<string, unknown> = {}
+    if (note) params.admin_note = note
+    await api.post(`/wallet/admin/withdrawals/${id}/approve`, null, { params })
+  },
+
+  async rejectWithdrawal(id: string, note?: string): Promise<void> {
+    const params: Record<string, unknown> = {}
+    if (note) params.admin_note = note
+    await api.post(`/wallet/admin/withdrawals/${id}/reject`, null, { params })
   },
 }

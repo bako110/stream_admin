@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { financeService } from '@/services/finance.service'
-import { TrendingUp, TrendingDown, Wallet, Users, ArrowDownCircle, CreditCard } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Users, ArrowDownCircle, CreditCard, Search, X } from 'lucide-react'
 import clsx from 'clsx'
 
 const TX_TYPE_LABELS: Record<string, string> = {
@@ -82,6 +82,8 @@ export function FinancePage() {
   const [txPage, setTxPage] = useState(1)
   const [txType, setTxType] = useState('')
   const [txStatus, setTxStatus] = useState('')
+  const [txSearch, setTxSearch] = useState('')
+  const [txSearchInput, setTxSearchInput] = useState('')
   const [wPage, setWPage] = useState(1)
   const [wStatus, setWStatus] = useState('')
 
@@ -92,8 +94,8 @@ export function FinancePage() {
   })
 
   const { data: transactions, isLoading: txLoading } = useQuery({
-    queryKey: ['finance-transactions', txPage, txType, txStatus],
-    queryFn: () => financeService.getTransactions(txPage, 50, txType || undefined, txStatus || undefined),
+    queryKey: ['finance-transactions', txPage, txType, txStatus, txSearch],
+    queryFn: () => financeService.getTransactions(txPage, 50, txType || undefined, txStatus || undefined, txSearch || undefined),
     enabled: tab === 'transactions',
   })
 
@@ -194,6 +196,29 @@ export function FinancePage() {
       {tab === 'transactions' && (
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
+            {/* Recherche par ID de transaction */}
+            <form
+              className="flex items-center gap-1"
+              onSubmit={e => { e.preventDefault(); setTxSearch(txSearchInput.trim()); setTxPage(1) }}
+            >
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
+                <input
+                  className="input pl-8 pr-8 w-72 text-sm font-mono"
+                  placeholder="ID transaction (UUID)..."
+                  value={txSearchInput}
+                  onChange={e => setTxSearchInput(e.target.value)}
+                />
+                {txSearchInput && (
+                  <button type="button" onClick={() => { setTxSearchInput(''); setTxSearch(''); setTxPage(1) }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <button type="submit" className="btn-ghost py-1.5 px-3 text-xs">Chercher</button>
+            </form>
+
             <select className="input w-48 text-sm" value={txType} onChange={e => { setTxType(e.target.value); setTxPage(1) }}>
               <option value="">Tous les types</option>
               {TX_TYPES.map(t => <option key={t} value={t}>{TX_TYPE_LABELS[t]}</option>)}
@@ -205,6 +230,11 @@ export function FinancePage() {
               <option value="failed">Échoué</option>
               <option value="cancelled">Annulé</option>
             </select>
+            {txSearch && (
+              <span className="self-center text-xs bg-violet-500/20 text-violet-400 px-2 py-1 rounded-md font-mono">
+                ID: {txSearch.slice(0, 8)}…
+              </span>
+            )}
             {transactions && <p className="text-xs text-gray-500 self-center ml-auto">{transactions.total.toLocaleString('fr-FR')} transaction{transactions.total !== 1 ? 's' : ''}</p>}
           </div>
 
@@ -230,10 +260,11 @@ export function FinancePage() {
                   )) : (transactions?.items ?? []).length === 0 ? (
                     <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">Aucune transaction</td></tr>
                   ) : (transactions?.items ?? []).map(tx => (
-                    <tr key={tx.id} className="table-row-hover">
+                    <tr key={tx.id} className={clsx('table-row-hover', txSearch && transactions?.total === 1 && 'bg-violet-500/5 ring-1 ring-inset ring-violet-500/30')}>
                       <td className="px-4 py-3">
                         <p className="text-gray-200 text-xs font-medium truncate max-w-[160px]">{tx.user.name}</p>
                         <p className="text-gray-500 text-xs truncate max-w-[160px]">{tx.user.email}</p>
+                        <p className="text-gray-600 text-[10px] font-mono truncate max-w-[160px] mt-0.5">{tx.id}</p>
                       </td>
                       <td className="px-4 py-3">
                         <span className={clsx('badge text-xs', TX_TYPE_COLORS[tx.type] ?? 'bg-gray-700 text-gray-300')}>
