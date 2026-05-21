@@ -91,4 +91,8 @@ export const usersService = {
     await api.put(`/users/${data.id}/role`, null, { params: { role: 'manager' } })
     return data
   },
+
+  async changePassword(userId: string, newPassword: string): Promise<void> {
+    await api.patch(`/users/${userId}/password`, { new_password: newPassword })
+  },
 }
