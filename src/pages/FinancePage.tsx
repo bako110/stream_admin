@@ -107,7 +107,7 @@ function TransactionDrawer({ txId, onClose }: { txId: string; onClose: () => voi
             <h2 className="text-sm font-semibold text-white">Détail de la transaction</h2>
             {data && (
               <p className="text-xs text-gray-500 font-mono mt-0.5 flex items-center gap-1">
-                {data.id.slice(0, 18)}…
+                {data.id}
                 <CopyButton text={data.id} />
               </p>
             )}
@@ -181,7 +181,7 @@ function TransactionDrawer({ txId, onClose }: { txId: string; onClose: () => voi
               {/* Transaction details */}
               <div className="card p-4">
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Transaction</p>
-                <DetailRow label="ID complet" mono>
+                <DetailRow label="ID transaction" mono>
                   <span className="flex items-center gap-1">
                     {data.id}
                     <CopyButton text={data.id} />
@@ -360,7 +360,7 @@ export function FinancePage() {
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
                 <input
                   className="input pl-8 pr-8 w-72 text-sm font-mono"
-                  placeholder="ID transaction (UUID)..."
+                  placeholder="Ex: TXN-2505-A3K9F2"
                   value={txSearchInput}
                   onChange={e => setTxSearchInput(e.target.value)}
                 />
@@ -424,7 +424,7 @@ export function FinancePage() {
                       <td className="px-4 py-3">
                         <p className="text-gray-200 text-xs font-medium truncate max-w-[160px]">{tx.user.name}</p>
                         <p className="text-gray-500 text-xs truncate max-w-[160px]">{tx.user.email}</p>
-                        <p className="text-gray-600 text-[10px] font-mono truncate max-w-[160px] mt-0.5">{tx.id.slice(0, 16)}…</p>
+                        <p className="text-gray-600 text-[10px] font-mono mt-0.5">{tx.id}</p>
                       </td>
                       <td className="px-4 py-3">
                         <span className={clsx('badge text-xs', TX_TYPE_COLORS[tx.type] ?? 'bg-gray-700 text-gray-300')}>
