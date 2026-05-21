@@ -5,6 +5,7 @@ import { contentService } from '@/services/content.service'
 import { Drawer } from '@/components/ui/Drawer'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Content } from '@/types'
 import { Plus, Trash2, Globe, Edit2, Tv, Layers, Lock } from 'lucide-react'
 import clsx from 'clsx'
@@ -24,6 +25,8 @@ const EMPTY = {
 export function SeriesPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [page, setPage] = useState(1)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Content | null>(null)
@@ -149,6 +152,9 @@ export function SeriesPage() {
                     <span className={clsx('badge', STATUS_COLORS[serie.status])}>{serie.status}</span>
                   </td>
                   <td className="px-4 py-3">
+                    {(() => {
+                      const canEdit = isAdmin || serie.added_by === user?.id
+                      return (
                     <div className="flex items-center gap-1 justify-end">
                       <button
                         onClick={() => navigate(`/content/seasons?serieId=${serie.id}&title=${encodeURIComponent(serie.title)}`)}
@@ -157,18 +163,26 @@ export function SeriesPage() {
                       >
                         <Layers className="w-4 h-4" />
                       </button>
-                      {serie.status !== 'published' && (
+                      {serie.status !== 'published' && canEdit && (
                         <button onClick={() => mutPublish.mutate(serie.id)} title="Publier" className="p-1.5 text-gray-400 hover:text-emerald-400 transition-colors">
                           <Globe className="w-4 h-4" />
                         </button>
                       )}
-                      <button onClick={() => openEdit(serie)} title="Modifier" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setToDelete(serie)} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canEdit ? (
+                        <button onClick={() => openEdit(serie)} title="Modifier" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span className="px-2 py-1 text-xs text-gray-600 italic">Lecture seule</span>
+                      )}
+                      {canEdit && (
+                        <button onClick={() => setToDelete(serie)} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
+                      )
+                    })()}
                   </td>
                 </tr>
               ))}

@@ -5,7 +5,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import clsx from 'clsx'
 
-const NAV = [
+const NAV_ADMIN = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/users', icon: Users, label: 'Utilisateurs' },
   { to: '/communities', icon: UsersRound, label: 'Communautés' },
@@ -18,8 +18,22 @@ const NAV = [
   { to: '/reports', icon: Flag, label: 'Signalements' },
 ]
 
+const NAV_MANAGER = [
+  { to: '/content/films', icon: Film, label: 'Films' },
+  { to: '/content/series', icon: Tv, label: 'Séries' },
+  { to: '/content/seasons', icon: Layers, label: 'Saisons' },
+  { to: '/content/episodes', icon: ListVideo, label: 'Épisodes' },
+]
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrateur',
+  manager: 'Manager',
+}
+
 export function Sidebar() {
   const { user, logout } = useAuth()
+  const isManager = user?.role === 'manager'
+  const NAV = isManager ? NAV_MANAGER : NAV_ADMIN
 
   return (
     <aside className="fixed inset-y-0 left-0 w-60 bg-gray-900 border-r border-gray-800 flex flex-col z-40">
@@ -63,7 +77,7 @@ export function Sidebar() {
             <p className="text-sm font-medium text-gray-200 truncate">
               {user?.display_name ?? (`${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() || user?.email)}
             </p>
-            <p className="text-xs text-gray-500 truncate">{user?.role}</p>
+            <p className="text-xs text-gray-500 truncate">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</p>
           </div>
         </div>
         <button onClick={logout} className="btn-ghost w-full justify-start text-xs py-2">

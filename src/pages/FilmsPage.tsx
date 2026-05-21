@@ -5,6 +5,7 @@ import { Drawer } from '@/components/ui/Drawer'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { VideoUpload } from '@/components/ui/VideoUpload'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Content } from '@/types'
 import { Plus, Trash2, Globe, Edit2, Film, Lock } from 'lucide-react'
 import clsx from 'clsx'
@@ -24,6 +25,8 @@ const EMPTY = {
 
 export function FilmsPage() {
   const qc = useQueryClient()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [page, setPage] = useState(1)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Content | null>(null)
@@ -176,19 +179,30 @@ export function FilmsPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-400">{film.view_count.toLocaleString('fr-FR')}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 justify-end">
-                      {film.status !== 'published' && (
-                        <button onClick={() => mutPublish.mutate(film.id)} title="Publier" className="p-1.5 text-gray-400 hover:text-emerald-400 transition-colors">
-                          <Globe className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button onClick={() => openEdit(film)} title="Modifier" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setToDelete(film)} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {(() => {
+                      const canEdit = isAdmin || film.added_by === user?.id
+                      return (
+                        <div className="flex items-center gap-1 justify-end">
+                          {film.status !== 'published' && canEdit && (
+                            <button onClick={() => mutPublish.mutate(film.id)} title="Publier" className="p-1.5 text-gray-400 hover:text-emerald-400 transition-colors">
+                              <Globe className="w-4 h-4" />
+                            </button>
+                          )}
+                          {canEdit ? (
+                            <button onClick={() => openEdit(film)} title="Modifier" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <span className="px-2 py-1 text-xs text-gray-600 italic">Lecture seule</span>
+                          )}
+                          {canEdit && (
+                            <button onClick={() => setToDelete(film)} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </td>
                 </tr>
               ))}

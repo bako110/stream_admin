@@ -29,8 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(identifier: string, password: string) {
     const res = await authService.login(identifier, password)
-    if (res.user.role !== 'admin') {
-      throw new Error('Accès réservé aux administrateurs')
+    if (res.user.role !== 'admin' && res.user.role !== 'manager') {
+      throw new Error('Accès réservé aux administrateurs et managers')
     }
     localStorage.setItem('access_token', res.access_token)
     localStorage.setItem('refresh_token', res.refresh_token)

@@ -1,4 +1,4 @@
-export type UserRole = 'user' | 'artist' | 'admin'
+export type UserRole = 'user' | 'artist' | 'manager' | 'admin'
 
 export type ReportContentType = 'reel' | 'event' | 'concert' | 'comment'
 export type ReportReason = 'spam' | 'inappropriate' | 'violence' | 'harassment' | 'misinformation' | 'other'
@@ -143,6 +143,7 @@ export interface Content {
   average_rating: number | null
   published_at: string | null
   created_at: string
+  added_by: string | null
 }
 
 export interface ContentListResponse {

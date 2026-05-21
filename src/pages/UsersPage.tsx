@@ -10,10 +10,18 @@ import clsx from 'clsx'
 const ROLE_COLORS: Record<UserRole, string> = {
   user: 'bg-gray-700 text-gray-300',
   artist: 'bg-amber-500/20 text-amber-400',
+  manager: 'bg-blue-500/20 text-blue-400',
   admin: 'bg-violet-500/20 text-violet-400',
 }
 
-const ROLES: UserRole[] = ['user', 'artist', 'admin']
+const ROLE_LABELS: Record<UserRole, string> = {
+  user: 'Utilisateur',
+  artist: 'Artiste',
+  manager: 'Manager',
+  admin: 'Admin',
+}
+
+const ROLES: UserRole[] = ['user', 'artist', 'manager', 'admin']
 
 export function UsersPage() {
   const qc = useQueryClient()
@@ -81,7 +89,7 @@ export function UsersPage() {
           onChange={e => setRoleFilter(e.target.value)}
         >
           <option value="">Tous les rôles</option>
-          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+          {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
         </select>
         <button onClick={() => refetch()} className="btn-ghost p-2">
           <RefreshCw className="w-4 h-4" />
@@ -185,8 +193,8 @@ function UserRow({ user, onViewContent, onActivate, onDeactivate, onDelete, onRo
           onChange={e => onRoleChange(e.target.value as UserRole)}
           className={clsx('badge border-0 cursor-pointer bg-transparent text-xs', ROLE_COLORS[user.role])}
         >
-          {(['user', 'artist', 'admin'] as UserRole[]).map(r => (
-            <option key={r} value={r}>{r}</option>
+          {ROLES.map(r => (
+            <option key={r} value={r}>{ROLE_LABELS[r]}</option>
           ))}
         </select>
       </td>
