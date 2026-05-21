@@ -51,6 +51,26 @@ export interface WithdrawalList {
   items: Withdrawal[]
 }
 
+export interface RevenueData {
+  gross_revenue: {
+    total_eur: number
+    coins_total_eur: number
+    stripe_total_eur: number
+    this_month_eur: number
+    this_year_eur: number
+  }
+  charges: {
+    withdrawals_paid_eur: number
+    withdrawals_pending_eur: number
+  }
+  net_revenue_eur: number
+  subscriptions: {
+    active_count: number
+    by_plan: { plan: string; count: number }[]
+  }
+  monthly_trend: { year: number; month: number; eur: number; count: number; label: string }[]
+}
+
 export const financeService = {
   async getOverview(): Promise<FinanceOverview> {
     const { data } = await api.get<FinanceOverview>('/finance/overview')
@@ -76,6 +96,18 @@ export const financeService = {
 
   async getTransactionDetail(id: string): Promise<TransactionDetail> {
     const { data } = await api.get<TransactionDetail>(`/finance/transactions/${id}`)
+    return data
+  },
+
+  async unlockRevenue(password: string): Promise<string> {
+    const { data } = await api.post<{ token: string }>('/finance/revenue/unlock', { password })
+    return data.token
+  },
+
+  async getRevenue(token: string): Promise<RevenueData> {
+    const { data } = await api.get<RevenueData>('/finance/revenue', {
+      headers: { 'X-Revenue-Token': token },
+    })
     return data
   },
 
