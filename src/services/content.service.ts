@@ -12,23 +12,43 @@ export const contentService = {
     return data
   },
 
-  async listFilms(page = 1, limit = 20): Promise<ContentListResponse> {
-    const { data } = await api.get<ContentListResponse>('/content/films', { params: { page, limit } })
+  async listFilms(page = 1, limit = 20, filters?: {
+    year?: number; language?: string; is_premium?: boolean
+    sort?: 'recent' | 'rating' | 'year' | 'views'
+  }): Promise<ContentListResponse> {
+    const { data } = await api.get<ContentListResponse>('/content/films', {
+      params: { page, limit, ...filters },
+    })
     return data
   },
 
-  async listFilmsAdmin(page = 1, limit = 20): Promise<ContentListResponse> {
-    const { data } = await api.get<ContentListResponse>('/content/films/admin', { params: { page, limit } })
+  async listFilmsAdmin(page = 1, limit = 20, filters?: {
+    year?: number; language?: string; is_premium?: boolean; status?: string
+    sort?: 'recent' | 'rating' | 'year' | 'views'
+  }): Promise<ContentListResponse> {
+    const { data } = await api.get<ContentListResponse>('/content/films/admin', {
+      params: { page, limit, ...filters },
+    })
     return data
   },
 
-  async listSeries(page = 1, limit = 20): Promise<ContentListResponse> {
-    const { data } = await api.get<ContentListResponse>('/content/series', { params: { page, limit } })
+  async listSeries(page = 1, limit = 20, filters?: {
+    year?: number; language?: string; is_premium?: boolean
+    sort?: 'recent' | 'rating' | 'year' | 'views' | 'seasons'
+  }): Promise<ContentListResponse> {
+    const { data } = await api.get<ContentListResponse>('/content/series', {
+      params: { page, limit, ...filters },
+    })
     return data
   },
 
-  async listSeriesAdmin(page = 1, limit = 20): Promise<ContentListResponse> {
-    const { data } = await api.get<ContentListResponse>('/content/series/admin', { params: { page, limit } })
+  async listSeriesAdmin(page = 1, limit = 20, filters?: {
+    year?: number; language?: string; is_premium?: boolean; status?: string
+    sort?: 'recent' | 'rating' | 'year' | 'views' | 'seasons'
+  }): Promise<ContentListResponse> {
+    const { data } = await api.get<ContentListResponse>('/content/series/admin', {
+      params: { page, limit, ...filters },
+    })
     return data
   },
 
