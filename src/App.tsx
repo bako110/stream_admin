@@ -16,6 +16,7 @@ import { MonetizationPage } from '@/pages/MonetizationPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { CommunitiesPage } from '@/pages/CommunitiesPage'
 import { FinancePage } from '@/pages/FinancePage'
+import { SupportPage } from '@/pages/SupportPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="communities" element={<CommunitiesPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="finance" element={<FinancePage />} />
+              <Route path="support" element={<SupportPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
