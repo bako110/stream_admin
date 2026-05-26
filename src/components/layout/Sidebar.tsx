@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Film, Tv, Layers, ListVideo, LogOut, ShieldCheck, BadgeCheck, Flag, UsersRound, TrendingUp,
+  LayoutDashboard, Users, Film, Tv, Layers, ListVideo, LogOut, ShieldCheck, BadgeCheck, Flag, UsersRound, TrendingUp, DollarSign,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import clsx from 'clsx'
@@ -15,6 +15,7 @@ const NAV_ADMIN = [
   { to: '/content/episodes', icon: ListVideo, label: 'Épisodes' },
   { to: '/managers', icon: ShieldCheck, label: 'Managers' },
   { to: '/verification', icon: BadgeCheck, label: 'Vérifications' },
+  { to: '/monetization', icon: DollarSign, label: 'Monétisation' },
   { to: '/reports', icon: Flag, label: 'Signalements' },
   { to: '/finance', icon: TrendingUp, label: 'Finance' },
 ]
@@ -28,6 +29,7 @@ const NAV_MANAGER = [
   { to: '/content/seasons', icon: Layers, label: 'Saisons' },
   { to: '/content/episodes', icon: ListVideo, label: 'Épisodes' },
   { to: '/verification', icon: BadgeCheck, label: 'Vérifications' },
+  { to: '/monetization', icon: DollarSign, label: 'Monétisation' },
   { to: '/reports', icon: Flag, label: 'Signalements' },
   { to: '/finance', icon: TrendingUp, label: 'Finance' },
 ]

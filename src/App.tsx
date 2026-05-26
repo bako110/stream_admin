@@ -12,6 +12,7 @@ import { SeasonsPage } from '@/pages/SeasonsPage'
 import { EpisodesPage } from '@/pages/EpisodesPage'
 import { ManagersPage } from '@/pages/ManagersPage'
 import { VerificationPage } from '@/pages/VerificationPage'
+import { MonetizationPage } from '@/pages/MonetizationPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { CommunitiesPage } from '@/pages/CommunitiesPage'
 import { FinancePage } from '@/pages/FinancePage'
@@ -45,6 +46,7 @@ export default function App() {
               <Route path="content/episodes" element={<EpisodesPage />} />
               <Route path="managers" element={<ManagersPage />} />
               <Route path="verification" element={<VerificationPage />} />
+              <Route path="monetization" element={<MonetizationPage />} />
               <Route path="communities" element={<CommunitiesPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="finance" element={<FinancePage />} />
