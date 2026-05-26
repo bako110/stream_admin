@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { monetizationService } from '@/services/monetization.service'
-import type { MonetizationRequest } from '@/services/monetization.service'
-import { DollarSign, CheckCircle, XCircle, Clock, RefreshCw, User } from 'lucide-react'
+import type { MonetizationRequest, UserDetail } from '@/services/monetization.service'
+import {
+  DollarSign, CheckCircle, XCircle, Clock, RefreshCw,
+  Users, Film, FileText, AlertTriangle, ShieldOff, Shield, Calendar,
+} from 'lucide-react'
 import clsx from 'clsx'
 
 const CREATOR_TYPE_LABELS: Record<string, string> = {
@@ -118,13 +121,20 @@ interface MonetizationCardProps {
 function MonetizationCard({
   req, expanded, onToggle, rejectNote, onRejectNoteChange, onApprove, onReject, loading,
 }: MonetizationCardProps) {
-  const user       = req.user
-  const name       = user?.display_name ?? user?.username ?? '—'
-  const initial    = (user?.display_name?.[0] ?? user?.email?.[0] ?? 'U').toUpperCase()
-  const typeLabel  = CREATOR_TYPE_LABELS[req.creator_type] ?? req.creator_type
-  const createdAt  = req.created_at
+  const user      = req.user
+  const name      = user?.display_name ?? user?.username ?? '—'
+  const initial   = (user?.display_name?.[0] ?? user?.email?.[0] ?? 'U').toUpperCase()
+  const typeLabel = CREATOR_TYPE_LABELS[req.creator_type] ?? req.creator_type
+  const createdAt = req.created_at
     ? new Date(req.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : '—'
+
+  const { data: detail, isLoading: detailLoading } = useQuery<UserDetail>({
+    queryKey: ['monetization-user-detail', req.id],
+    queryFn:  () => monetizationService.getUserDetail(req.id),
+    enabled:  expanded,
+    staleTime: 60_000,
+  })
 
   return (
     <div className={clsx('card transition-all', expanded && 'ring-1 ring-emerald-500/30')}>
@@ -167,6 +177,18 @@ function MonetizationCard({
       {/* Détail expandé */}
       {expanded && (
         <div className="px-5 pb-5 space-y-4 border-t border-gray-800 pt-4">
+
+          {/* Profil utilisateur */}
+          {detailLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-pulse">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-16 bg-gray-800 rounded-lg" />
+              ))}
+            </div>
+          ) : detail ? (
+            <UserDetailPanel detail={detail} />
+          ) : null}
+
           {/* Nom public + description */}
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">Nom public</p>
@@ -229,4 +251,104 @@ function MonetizationCard({
       )}
     </div>
   )
+}
+
+function UserDetailPanel({ detail }: { detail: UserDetail }) {
+  const reportRisk =
+    detail.total_reports_received >= 10 ? 'high'
+    : detail.total_reports_received >= 3  ? 'medium'
+    : 'low'
+
+  const accountAge = detail.account_age_days != null
+    ? detail.account_age_days >= 365
+      ? `${Math.floor(detail.account_age_days / 365)} an${Math.floor(detail.account_age_days / 365) > 1 ? 's' : ''}`
+      : `${detail.account_age_days} j`
+    : '—'
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-gray-500 uppercase tracking-wide">Profil utilisateur</p>
+
+      {/* Status badges */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {!detail.is_active && (
+          <span className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-red-500/15 text-red-400">
+            <ShieldOff className="w-3 h-3" /> Compte bloqué
+          </span>
+        )}
+        {detail.is_verified && (
+          <span className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400">
+            <Shield className="w-3 h-3" /> Vérifié FoliX
+          </span>
+        )}
+        {detail.verification_status === 'pending' && (
+          <span className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400">
+            <Clock className="w-3 h-3" /> Vérification en cours
+          </span>
+        )}
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <StatTile icon={<Users className="w-4 h-4" />} label="Abonnés"  value={fmt(detail.followers_count)} color="text-emerald-400" />
+        <StatTile icon={<Users className="w-4 h-4" />} label="Abonnements" value={fmt(detail.following_count)} color="text-gray-400" />
+        <StatTile icon={<Film className="w-4 h-4" />} label="Reels"  value={fmt(detail.reels_count)}   color="text-purple-400" />
+        <StatTile icon={<FileText className="w-4 h-4" />} label="Posts" value={fmt(detail.posts_count)}  color="text-blue-400" />
+        <StatTile
+          icon={<AlertTriangle className="w-4 h-4" />}
+          label="Signalements"
+          value={String(detail.total_reports_received)}
+          sub={detail.pending_reports > 0 ? `${detail.pending_reports} en attente` : undefined}
+          color={reportRisk === 'high' ? 'text-red-400' : reportRisk === 'medium' ? 'text-amber-400' : 'text-gray-400'}
+          highlight={reportRisk !== 'low'}
+        />
+        <StatTile icon={<Calendar className="w-4 h-4" />} label="Ancienneté" value={accountAge} color="text-gray-400" />
+      </div>
+
+      {/* Report risk banner */}
+      {reportRisk === 'high' && (
+        <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          <span>Compte avec un nombre élevé de signalements — vérification recommandée avant approbation.</span>
+        </div>
+      )}
+      {reportRisk === 'medium' && (
+        <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 rounded-lg px-3 py-2">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          <span>Quelques signalements reçus — à prendre en compte.</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatTile({
+  icon, label, value, sub, color, highlight,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  sub?: string
+  color: string
+  highlight?: boolean
+}) {
+  return (
+    <div className={clsx(
+      'rounded-lg px-3 py-2.5 flex flex-col gap-0.5',
+      highlight ? 'bg-red-500/8 border border-red-500/20' : 'bg-gray-800/60',
+    )}>
+      <div className={clsx('flex items-center gap-1.5', color)}>
+        {icon}
+        <span className="text-xs text-gray-500">{label}</span>
+      </div>
+      <p className={clsx('text-sm font-semibold', color)}>{value}</p>
+      {sub && <p className="text-xs text-gray-500">{sub}</p>}
+    </div>
+  )
+}
+
+function fmt(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}k`
+  return String(n)
 }
