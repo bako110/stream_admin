@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { contentService } from '@/services/content.service'
 import { Drawer } from '@/components/ui/Drawer'
@@ -7,7 +8,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload'
 import { VideoUpload } from '@/components/ui/VideoUpload'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Content } from '@/types'
-import { Plus, Trash2, Globe, Edit2, Film, Lock } from 'lucide-react'
+import { Plus, Trash2, Globe, Edit2, Film, Lock, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_COLORS = {
@@ -17,7 +18,8 @@ const STATUS_COLORS = {
 }
 
 const EMPTY = {
-  title: '', year: new Date().getFullYear(), language: 'fr',
+  title: '', original_title: '', director: '',
+  year: new Date().getFullYear(), language: 'fr',
   synopsis: '', thumbnail_url: '', banner_url: '', trailer_url: '',
   is_premium: false, price: '',
   video_url: '', video_duration: 0,
@@ -25,6 +27,7 @@ const EMPTY = {
 
 export function FilmsPage() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const [page, setPage] = useState(1)
@@ -42,6 +45,8 @@ export function FilmsPage() {
     mutationFn: async () => {
       const film = await contentService.createFilm({
         title: form.title,
+        original_title: form.original_title || undefined,
+        director: form.director || undefined,
         year: Number(form.year),
         language: form.language,
         synopsis: form.synopsis || undefined,
@@ -69,6 +74,10 @@ export function FilmsPage() {
     mutationFn: async () => {
       const film = await contentService.updateFilm(editing!.id, {
         title: form.title,
+        original_title: form.original_title || undefined,
+        director: form.director || undefined,
+        year: Number(form.year),
+        language: form.language,
         synopsis: form.synopsis || undefined,
         thumbnail_url: form.thumbnail_url || undefined,
         banner_url: form.banner_url || undefined,
@@ -105,7 +114,10 @@ export function FilmsPage() {
   function openEdit(f: Content) {
     setEditing(f)
     setForm({
-      title: f.title, year: f.year, language: f.language,
+      title: f.title,
+      original_title: f.original_title ?? '',
+      director: f.director ?? '',
+      year: f.year, language: f.language,
       synopsis: f.synopsis ?? '',
       thumbnail_url: f.thumbnail_url ?? '', banner_url: f.banner_url ?? '',
       trailer_url: f.trailer_url ?? '',
@@ -124,7 +136,12 @@ export function FilmsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-gray-400 text-sm">{data?.total ?? 0} film{(data?.total ?? 0) !== 1 ? 's' : ''}</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-1.5 text-gray-400 hover:text-gray-200 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <p className="text-gray-400 text-sm">{data?.total ?? 0} film{(data?.total ?? 0) !== 1 ? 's' : ''}</p>
+        </div>
         <button onClick={openCreate} className="btn-primary">
           <Plus className="w-4 h-4" />Ajouter un film
         </button>
@@ -228,6 +245,10 @@ export function FilmsPage() {
                 <label className="label">Titre *</label>
                 <input required className="input" placeholder="Titre du film" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
               </div>
+              <div>
+                <label className="label">Titre original</label>
+                <input className="input" placeholder="ex: The Dark Knight" value={form.original_title} onChange={e => setForm(f => ({ ...f, original_title: e.target.value }))} />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label">Année *</label>
@@ -246,6 +267,10 @@ export function FilmsPage() {
                     <option value="sw">Swahili</option>
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="label">Réalisateur</label>
+                <input className="input" placeholder="ex: Christopher Nolan" value={form.director} onChange={e => setForm(f => ({ ...f, director: e.target.value }))} />
               </div>
               <div>
                 <label className="label">Synopsis</label>

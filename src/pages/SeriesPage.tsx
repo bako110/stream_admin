@@ -7,7 +7,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Content } from '@/types'
-import { Plus, Trash2, Globe, Edit2, Tv, Layers, Lock } from 'lucide-react'
+import { Plus, Trash2, Globe, Edit2, Tv, Layers, Lock, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_COLORS = {
@@ -17,7 +17,8 @@ const STATUS_COLORS = {
 }
 
 const EMPTY = {
-  title: '', year: new Date().getFullYear(), language: 'fr',
+  title: '', original_title: '', director: '',
+  year: new Date().getFullYear(), language: 'fr',
   synopsis: '', thumbnail_url: '', banner_url: '', trailer_url: '',
   is_premium: false, price: '',
 }
@@ -41,6 +42,8 @@ export function SeriesPage() {
   const mutCreate = useMutation({
     mutationFn: () => contentService.createSerie({
       title: form.title,
+      original_title: form.original_title || undefined,
+      director: form.director || undefined,
       year: Number(form.year),
       language: form.language,
       synopsis: form.synopsis || undefined,
@@ -56,6 +59,10 @@ export function SeriesPage() {
   const mutUpdate = useMutation({
     mutationFn: () => contentService.updateSerie(editing!.id, {
       title: form.title,
+      original_title: form.original_title || undefined,
+      director: form.director || undefined,
+      year: Number(form.year),
+      language: form.language,
       synopsis: form.synopsis || undefined,
       thumbnail_url: form.thumbnail_url || undefined,
       banner_url: form.banner_url || undefined,
@@ -81,7 +88,10 @@ export function SeriesPage() {
   function openEdit(s: Content) {
     setEditing(s)
     setForm({
-      title: s.title, year: s.year, language: s.language,
+      title: s.title,
+      original_title: s.original_title ?? '',
+      director: s.director ?? '',
+      year: s.year, language: s.language,
       synopsis: s.synopsis ?? '',
       thumbnail_url: s.thumbnail_url ?? '', banner_url: s.banner_url ?? '',
       trailer_url: s.trailer_url ?? '',
@@ -99,7 +109,12 @@ export function SeriesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-gray-400 text-sm">{data?.total ?? 0} série{(data?.total ?? 0) !== 1 ? 's' : ''}</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-1.5 text-gray-400 hover:text-gray-200 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <p className="text-gray-400 text-sm">{data?.total ?? 0} série{(data?.total ?? 0) !== 1 ? 's' : ''}</p>
+        </div>
         <button onClick={openCreate} className="btn-primary">
           <Plus className="w-4 h-4" />Ajouter une série
         </button>
@@ -208,6 +223,10 @@ export function SeriesPage() {
                 <label className="label">Titre *</label>
                 <input required className="input" placeholder="Titre de la série" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
               </div>
+              <div>
+                <label className="label">Titre original</label>
+                <input className="input" placeholder="ex: Breaking Bad" value={form.original_title} onChange={e => setForm(f => ({ ...f, original_title: e.target.value }))} />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label">Année *</label>
@@ -226,6 +245,10 @@ export function SeriesPage() {
                     <option value="sw">Swahili</option>
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="label">Créateur / Réalisateur</label>
+                <input className="input" placeholder="ex: Vince Gilligan" value={form.director} onChange={e => setForm(f => ({ ...f, director: e.target.value }))} />
               </div>
               <div>
                 <label className="label">Synopsis</label>
