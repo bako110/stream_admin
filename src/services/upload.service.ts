@@ -52,7 +52,12 @@ export async function uploadVideo(
           reject(new Error('Réponse invalide du serveur'))
         }
       } else {
-        reject(new Error(`Erreur ${xhr.status}`))
+        let msg = `Erreur ${xhr.status}`
+        try {
+          const body = JSON.parse(xhr.responseText)
+          if (body?.detail) msg = body.detail
+        } catch { /* ignore */ }
+        reject(new Error(msg))
       }
     })
 

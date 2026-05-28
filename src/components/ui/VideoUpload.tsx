@@ -68,7 +68,7 @@ export function VideoUpload({ value, onChange, label }: VideoUploadProps) {
           className="btn-ghost text-xs py-1.5 w-full justify-center"
         >
           <Upload className="w-3.5 h-3.5" />
-          {loading ? `Upload… ${progress}%` : 'Choisir une vidéo (MP4)'}
+          {loading ? `Upload… ${progress}%` : 'Choisir une vidéo (MP4, MOV, WebM, AVI, MKV…)'}
         </button>
 
         {loading && (
@@ -82,14 +82,20 @@ export function VideoUpload({ value, onChange, label }: VideoUploadProps) {
 
         <input
           className="input text-xs"
-          placeholder="ou coller une URL vidéo…"
+          placeholder="ou coller une URL vidéo (HLS, MP4, AVI…)"
           value={value}
           onChange={e => onChange(e.target.value)}
         />
 
         {error && <p className="text-xs text-red-400">{error}</p>}
       </div>
-      <input ref={inputRef} type="file" accept="video/mp4,video/quicktime" className="hidden" onChange={handleFile} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="video/mp4,video/quicktime,video/x-msvideo,video/avi,video/x-matroska,video/webm,video/ogg,video/3gpp,video/3gpp2,video/x-flv,video/x-ms-wmv,video/mpeg,.mp4,.mov,.avi,.mkv,.webm,.ogv,.3gp,.flv,.wmv,.mpg,.mpeg"
+        className="hidden"
+        onChange={handleFile}
+      />
     </div>
   )
 }
