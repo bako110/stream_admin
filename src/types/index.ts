@@ -130,6 +130,7 @@ export interface Content {
   director: string | null
   cast: unknown
   language: string
+  genre: string | null
   country: string | null
   rating: string | null
   thumbnail_url: string | null

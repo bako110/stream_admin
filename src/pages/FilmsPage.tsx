@@ -17,9 +17,23 @@ const STATUS_COLORS = {
   archived: 'bg-red-500/15 text-red-400',
 }
 
+const GENRES = [
+  'Action', 'Aventure', 'Animation', 'Comédie', 'Documentaire',
+  'Drame', 'Fantastique', 'Horreur', 'Musical', 'Romance',
+  'Science-Fiction', 'Thriller', 'Western', 'Policier', 'Historique',
+]
+
+const COUNTRIES = [
+  'Sénégal', 'Côte d\'Ivoire', 'Mali', 'Cameroun', 'Nigeria',
+  'Ghana', 'Maroc', 'Algérie', 'Tunisie', 'Égypte',
+  'Afrique du Sud', 'Kenya', 'France', 'États-Unis', 'Royaume-Uni',
+  'Inde', 'Brésil', 'Mexique', 'Chine', 'Japon', 'Corée du Sud',
+]
+
 const EMPTY = {
   title: '', original_title: '', director: '',
   year: new Date().getFullYear(), language: 'fr',
+  genre: '', country: '',
   synopsis: '', thumbnail_url: '', banner_url: '', trailer_url: '',
   is_premium: false, price: '',
   video_url: '', video_duration: 0,
@@ -49,6 +63,8 @@ export function FilmsPage() {
         director: form.director || undefined,
         year: Number(form.year),
         language: form.language,
+        genre: form.genre || undefined,
+        country: form.country || undefined,
         synopsis: form.synopsis || undefined,
         thumbnail_url: form.thumbnail_url || undefined,
         banner_url: form.banner_url || undefined,
@@ -78,6 +94,8 @@ export function FilmsPage() {
         director: form.director || undefined,
         year: Number(form.year),
         language: form.language,
+        genre: form.genre || undefined,
+        country: form.country || undefined,
         synopsis: form.synopsis || undefined,
         thumbnail_url: form.thumbnail_url || undefined,
         banner_url: form.banner_url || undefined,
@@ -118,6 +136,8 @@ export function FilmsPage() {
       original_title: f.original_title ?? '',
       director: f.director ?? '',
       year: f.year, language: f.language,
+      genre: f.genre ?? '',
+      country: f.country ?? '',
       synopsis: f.synopsis ?? '',
       thumbnail_url: f.thumbnail_url ?? '', banner_url: f.banner_url ?? '',
       trailer_url: f.trailer_url ?? '',
@@ -153,6 +173,8 @@ export function FilmsPage() {
             <thead>
               <tr className="border-b border-gray-800 text-left">
                 <th className="px-4 py-3 text-gray-400 font-medium">Film</th>
+                <th className="px-4 py-3 text-gray-400 font-medium">Genre</th>
+                <th className="px-4 py-3 text-gray-400 font-medium">Pays</th>
                 <th className="px-4 py-3 text-gray-400 font-medium">Année</th>
                 <th className="px-4 py-3 text-gray-400 font-medium">Langue</th>
                 <th className="px-4 py-3 text-gray-400 font-medium">Statut</th>
@@ -189,6 +211,8 @@ export function FilmsPage() {
                       </div>
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">{film.genre ?? <span className="text-gray-600 italic">—</span>}</td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">{film.country ?? <span className="text-gray-600 italic">—</span>}</td>
                   <td className="px-4 py-3 text-gray-400">{film.year}</td>
                   <td className="px-4 py-3 text-gray-400 uppercase text-xs">{film.language}</td>
                   <td className="px-4 py-3">
@@ -265,6 +289,22 @@ export function FilmsPage() {
                     <option value="bm">Bambara</option>
                     <option value="ha">Haoussa</option>
                     <option value="sw">Swahili</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Genre</label>
+                  <select className="input" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
+                    <option value="">— Sélectionner —</option>
+                    {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Pays d'origine</label>
+                  <select className="input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
+                    <option value="">— Sélectionner —</option>
+                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
