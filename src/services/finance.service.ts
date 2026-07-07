@@ -5,7 +5,7 @@ export interface FinanceOverview {
   withdrawals: { pending_count: number; total_paid_eur: number }
   payments: { total_eur: number; this_month_eur: number }
   subscriptions: { active_count: number }
-  transaction_breakdown: { type: string; count: number; coins: number; eur: number }[]
+  transaction_breakdown: { type: string; count: number; gogold: number; eur: number }[]
 }
 
 export interface Transaction {
@@ -13,7 +13,7 @@ export interface Transaction {
   user: { email: string; name: string; username: string | null }
   type: string
   status: string
-  coins_amount: number
+  gogold_amount: number
   eur_amount: number | null
   balance_after: number | null
   description: string | null
@@ -35,7 +35,7 @@ export interface TransactionList {
 export interface Withdrawal {
   id: string
   user: { email: string; name: string }
-  coins_amount: number
+  gogold_amount: number
   eur_amount: number
   status: string
   payout_method: string | null
@@ -54,7 +54,7 @@ export interface WithdrawalList {
 export interface RevenueData {
   gross_revenue: {
     total_eur: number
-    coins_total_eur: number
+    gogold_total_eur: number
     stripe_total_eur: number
     this_month_eur: number
     this_year_eur: number

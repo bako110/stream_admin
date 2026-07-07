@@ -144,8 +144,8 @@ function TransactionDrawer({ txId, onClose }: { txId: string; onClose: () => voi
               )}>
                 <div>
                   <p className="text-xs text-gray-400 mb-0.5">Montant</p>
-                  <p className={clsx('text-2xl font-bold', data.coins_amount >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                    {data.coins_amount >= 0 ? '+' : ''}{data.coins_amount.toLocaleString('fr-FR')} coins
+                  <p className={clsx('text-2xl font-bold', data.gogold_amount >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                    {data.gogold_amount >= 0 ? '+' : ''}{data.gogold_amount.toLocaleString('fr-FR')} GoGold
                   </p>
                   {data.eur_amount != null && (
                     <p className="text-xs text-gray-400 mt-0.5">{fmt(data.eur_amount)} €</p>
@@ -188,7 +188,7 @@ function TransactionDrawer({ txId, onClose }: { txId: string; onClose: () => voi
                     <CopyButton text={data.id} />
                   </span>
                 </DetailRow>
-                <DetailRow label="Solde après" value={data.balance_after != null ? `${data.balance_after.toLocaleString('fr-FR')} coins` : null} />
+                <DetailRow label="Solde après" value={data.balance_after != null ? `${data.balance_after.toLocaleString('fr-FR')} GoGold` : null} />
                 {data.description && <DetailRow label="Description" value={data.description} />}
                 {data.reference_type && <DetailRow label="Ref. type" value={data.reference_type} mono />}
                 {data.reference_id && (
@@ -336,7 +336,7 @@ function RevenueSection() {
           { label: 'Revenu brut total',   value: `${fmt(data.gross_revenue.total_eur)} €`,     sub: `Ce mois : ${fmt(data.gross_revenue.this_month_eur)} €`,  color: 'bg-emerald-500/20 text-emerald-400', icon: TrendingUp },
           { label: 'Revenu net estimé',   value: `${fmt(data.net_revenue_eur)} €`,             sub: `Marge : ${margin}%`,                                     color: 'bg-violet-500/20 text-violet-400',  icon: Building2 },
           { label: 'Cette année',         value: `${fmt(data.gross_revenue.this_year_eur)} €`, sub: undefined,                                                color: 'bg-blue-500/20 text-blue-400',      icon: TrendingUp },
-          { label: 'Ventes coins',        value: `${fmt(data.gross_revenue.coins_total_eur)} €`, sub: undefined,                                              color: 'bg-amber-500/20 text-amber-400',    icon: CreditCard },
+          { label: 'Ventes GoGold',        value: `${fmt(data.gross_revenue.gogold_total_eur)} €`, sub: undefined,                                              color: 'bg-amber-500/20 text-amber-400',    icon: CreditCard },
           { label: 'Paiements Stripe',    value: `${fmt(data.gross_revenue.stripe_total_eur)} €`, sub: undefined,                                             color: 'bg-cyan-500/20 text-cyan-400',      icon: CreditCard },
           { label: 'Retraits versés',     value: `${fmt(data.charges.withdrawals_paid_eur)} €`, sub: `En attente : ${fmt(data.charges.withdrawals_pending_eur)} €`, color: 'bg-orange-500/20 text-orange-400', icon: ArrowDownCircle },
         ].map(({ label, value, sub, color, icon: Icon }) => (
@@ -513,7 +513,7 @@ export function FinancePage() {
                     <p className="text-xs text-gray-500 mt-1">{fmtCoins(t.count)} opération{t.count !== 1 ? 's' : ''}</p>
                   </div>
                   <div className="text-right shrink-0 ml-2">
-                    <p className="text-xs font-medium text-gray-200">{fmtCoins(t.coins)} C</p>
+                    <p className="text-xs font-medium text-gray-200">{fmtCoins(t.gogold)} GoGold</p>
                     {t.eur > 0 && <p className="text-xs text-gray-500">{fmt(t.eur)} €</p>}
                   </div>
                 </div>
@@ -632,8 +632,8 @@ export function FinancePage() {
                           {tx.status}
                         </span>
                       </td>
-                      <td className={clsx('px-4 py-3 text-right font-mono text-xs', tx.coins_amount >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                        {tx.coins_amount >= 0 ? '+' : ''}{fmtCoins(tx.coins_amount)}
+                      <td className={clsx('px-4 py-3 text-right font-mono text-xs', tx.gogold_amount >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                        {tx.gogold_amount >= 0 ? '+' : ''}{fmtCoins(tx.gogold_amount)}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-300 text-xs font-mono">
                         {tx.eur_amount != null ? `${fmt(tx.eur_amount)} €` : '—'}
@@ -707,7 +707,7 @@ export function FinancePage() {
                         <p className="text-gray-200 text-xs font-medium">{w.user.name}</p>
                         <p className="text-gray-500 text-xs">{w.user.email}</p>
                       </td>
-                      <td className="px-4 py-3 text-right text-orange-400 font-mono text-xs">{fmtCoins(w.coins_amount)}</td>
+                      <td className="px-4 py-3 text-right text-orange-400 font-mono text-xs">{fmtCoins(w.gogold_amount)}</td>
                       <td className="px-4 py-3 text-right text-gray-200 font-mono text-xs">{fmt(w.eur_amount)} €</td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{w.payout_method ?? '—'}</td>
                       <td className="px-4 py-3">
