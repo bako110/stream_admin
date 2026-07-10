@@ -34,7 +34,7 @@ export function MonetizationPage() {
   })
 
   const mutReject = useMutation({
-    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+    mutationFn: ({ id, note }: { id: string; note: string }) =>
       monetizationService.rejectRequest(id, note),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['monetization-pending'] }),
   })
@@ -163,6 +163,7 @@ function MonetizationCard({
             {req.monthly_audience && (
               <span className="badge bg-gray-700 text-gray-300">{req.monthly_audience}</span>
             )}
+            {req.auto_review_at && <AutoReviewBadge autoReviewAt={req.auto_review_at} />}
           </div>
           <p className="text-gray-500 text-xs mt-0.5">{user?.email ?? '—'}</p>
         </div>
@@ -218,7 +219,7 @@ function MonetizationCard({
 
           {/* Note de refus */}
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">Note de refus (optionnelle)</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">Motif de refus (obligatoire pour refuser)</p>
             <textarea
               value={rejectNote}
               onChange={e => onRejectNoteChange(e.target.value)}
@@ -240,7 +241,8 @@ function MonetizationCard({
             </button>
             <button
               onClick={onReject}
-              disabled={loading}
+              disabled={loading || rejectNote.trim().length < 3}
+              title={rejectNote.trim().length < 3 ? 'Indiquez un motif de refus' : undefined}
               className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
             >
               <XCircle className="w-4 h-4" />
@@ -351,4 +353,21 @@ function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}k`
   return String(n)
+}
+
+function AutoReviewBadge({ autoReviewAt }: { autoReviewAt: string }) {
+  const remainingMs = new Date(autoReviewAt).getTime() - Date.now()
+  if (remainingMs <= 0) {
+    return (
+      <span className="badge bg-amber-500/15 text-amber-400 flex items-center gap-1">
+        <Clock className="w-3 h-3" /> Validation auto imminente
+      </span>
+    )
+  }
+  const hours = Math.ceil(remainingMs / (3600 * 1000))
+  return (
+    <span className="badge bg-violet-500/15 text-violet-400 flex items-center gap-1">
+      <Clock className="w-3 h-3" /> Auto-validée dans {hours}h si non traitée
+    </span>
+  )
 }

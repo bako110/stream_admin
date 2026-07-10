@@ -13,6 +13,8 @@ export interface MonetizationRequest {
   admin_note: string | null
   created_at: string | null
   reviewed_at: string | null
+  auto_review_at: string | null
+  auto_approved: boolean
   user: {
     id: string
     display_name: string | null
@@ -54,7 +56,7 @@ export const monetizationService = {
     await api.post(`/monetization/admin/requests/${requestId}/approve`)
   },
 
-  async rejectRequest(requestId: string, note?: string): Promise<void> {
-    await api.post(`/monetization/admin/requests/${requestId}/reject`, { note: note ?? null })
+  async rejectRequest(requestId: string, note: string): Promise<void> {
+    await api.post(`/monetization/admin/requests/${requestId}/reject`, { note })
   },
 }
