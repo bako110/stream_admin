@@ -14,6 +14,7 @@ import { ManagersPage } from '@/pages/ManagersPage'
 import { VerificationPage } from '@/pages/VerificationPage'
 import { MonetizationPage } from '@/pages/MonetizationPage'
 import { ReportsPage } from '@/pages/ReportsPage'
+import { FeedbackPage } from '@/pages/FeedbackPage'
 import { CommunitiesPage } from '@/pages/CommunitiesPage'
 import { FinancePage } from '@/pages/FinancePage'
 import { SupportPage } from '@/pages/SupportPage'
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="monetization" element={<MonetizationPage />} />
               <Route path="communities" element={<CommunitiesPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="feedback" element={<FeedbackPage />} />
               <Route path="finance" element={<FinancePage />} />
               <Route path="support" element={<SupportPage />} />
               <Route path="notifications" element={<NotificationsPage />} />

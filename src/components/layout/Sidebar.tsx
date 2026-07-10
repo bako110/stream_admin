@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Film, Tv, Layers, ListVideo, LogOut, ShieldCheck, BadgeCheck, Flag, UsersRound, TrendingUp, DollarSign, LifeBuoy, Bell,
+  LayoutDashboard, Users, Film, Tv, Layers, ListVideo, LogOut, ShieldCheck, BadgeCheck, Flag, UsersRound, TrendingUp, DollarSign, LifeBuoy, Bell, MessageSquareText,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import clsx from 'clsx'
@@ -17,6 +17,7 @@ const NAV_ADMIN = [
   { to: '/verification', icon: BadgeCheck, label: 'Vérifications' },
   { to: '/monetization', icon: DollarSign, label: 'Monétisation' },
   { to: '/reports', icon: Flag, label: 'Signalements' },
+  { to: '/feedback', icon: MessageSquareText, label: 'Retours utilisateurs' },
   { to: '/support', icon: LifeBuoy, label: 'Support' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/finance', icon: TrendingUp, label: 'Finance' },
@@ -33,6 +34,7 @@ const NAV_MANAGER = [
   { to: '/verification', icon: BadgeCheck, label: 'Vérifications' },
   { to: '/monetization', icon: DollarSign, label: 'Monétisation' },
   { to: '/reports', icon: Flag, label: 'Signalements' },
+  { to: '/feedback', icon: MessageSquareText, label: 'Retours utilisateurs' },
   { to: '/support', icon: LifeBuoy, label: 'Support' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/finance', icon: TrendingUp, label: 'Finance' },

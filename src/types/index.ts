@@ -31,6 +31,27 @@ export interface ReportListResponse {
   limit: number
 }
 
+export type FeedbackCategory = 'bug' | 'suggestion' | 'avis'
+export type FeedbackStatus = 'nouveau' | 'lu' | 'traite'
+
+export interface Feedback {
+  id: string
+  category: FeedbackCategory
+  message: string
+  status: FeedbackStatus
+  admin_response: string | null
+  created_at: string
+  resolved_at: string | null
+  user: { id: string; email: string; username: string | null; display_name: string | null }
+}
+
+export interface FeedbackListResponse {
+  items: Feedback[]
+  total: number
+  page: number
+  limit: number
+}
+
 export interface UserReel {
   id: string
   caption: string | null
