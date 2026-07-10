@@ -14,7 +14,7 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'http://178.104.248.78',
+        target: 'https://gofolyx.com',
         changeOrigin: true,
         timeout: 7200000,
         proxyTimeout: 7200000,
