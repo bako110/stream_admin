@@ -5,6 +5,19 @@ export interface AdminNotificationPayload {
   body: string
 }
 
+export interface AdminAnnouncementImagePayload extends AdminNotificationPayload {
+  image_url?: string
+}
+
+export type AppUpdatePlatform = 'android' | 'ios' | 'all'
+
+export interface AdminAppUpdatePayload {
+  title?: string
+  body: string
+  platform: AppUpdatePlatform
+  image_url?: string
+}
+
 export interface AdminUserResult {
   id: string
   username: string | null
@@ -20,8 +33,18 @@ export const notificationsService = {
     return data
   },
 
+  async broadcastWithImage(payload: AdminAnnouncementImagePayload): Promise<{ sent: number }> {
+    const { data } = await api.post<{ sent: number }>('/admin/notifications/broadcast-image', payload)
+    return data
+  },
+
   async sendToUser(userId: string, payload: AdminNotificationPayload): Promise<{ sent: boolean }> {
     const { data } = await api.post<{ sent: boolean }>(`/admin/notifications/send/${userId}`, payload)
+    return data
+  },
+
+  async sendAppUpdate(payload: AdminAppUpdatePayload): Promise<{ sent: number; platform: AppUpdatePlatform }> {
+    const { data } = await api.post<{ sent: number; platform: AppUpdatePlatform }>('/admin/notifications/app-update', payload)
     return data
   },
 
