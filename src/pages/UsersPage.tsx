@@ -36,6 +36,9 @@ export function UsersPage() {
   const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['users', roleFilter],
     queryFn: () => usersService.list(1, 100, roleFilter || undefined),
+    // Un utilisateur peut se (dés)activer/supprimer lui-même depuis le mobile — l'admin
+    // doit refléter ce changement externe sans dépendre d'un clic manuel sur Actualiser.
+    refetchInterval: 30_000,
   })
 
   const mutActivate = useMutation({
