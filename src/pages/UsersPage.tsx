@@ -204,9 +204,17 @@ function UserRow({ user, isAdmin, onViewContent, onActivate, onDeactivate, onDel
         </select>
       </td>
       <td className="px-4 py-3">
-        <span className={clsx('badge', user.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400')}>
-          {user.is_active ? 'Actif' : 'Inactif'}
+        <span
+          className={clsx('badge', user.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400')}
+          title={!user.is_active ? (user.is_deleted ? user.deletion_reason ?? undefined : user.deactivation_reason ?? undefined) : undefined}
+        >
+          {user.is_active ? 'Actif' : user.is_deleted ? 'Supprimé' : 'Inactif'}
         </span>
+        {!user.is_active && (user.is_deleted ? user.deletion_reason : user.deactivation_reason) && (
+          <div className="text-xs text-gray-500 mt-1 max-w-[160px] truncate">
+            {user.is_deleted ? user.deletion_reason : user.deactivation_reason}
+          </div>
+        )}
       </td>
       <td className="px-4 py-3 text-gray-400 text-xs">
         {new Date(user.created_at).toLocaleDateString('fr-FR')}

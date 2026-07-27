@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Content } from '@/types'
+import { COUNTRIES } from '@/lib/countries'
 import { Plus, Trash2, Globe, Edit2, Tv, Layers, Lock, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -19,6 +20,7 @@ const STATUS_COLORS = {
 const EMPTY = {
   title: '', original_title: '', director: '',
   year: new Date().getFullYear(), language: 'fr',
+  country: '',
   synopsis: '', thumbnail_url: '', banner_url: '', trailer_url: '',
   is_premium: false, price: '',
 }
@@ -46,6 +48,7 @@ export function SeriesPage() {
       director: form.director || undefined,
       year: Number(form.year),
       language: form.language,
+      country: form.country || undefined,
       synopsis: form.synopsis || undefined,
       thumbnail_url: form.thumbnail_url || undefined,
       banner_url: form.banner_url || undefined,
@@ -63,6 +66,7 @@ export function SeriesPage() {
       director: form.director || undefined,
       year: Number(form.year),
       language: form.language,
+      country: form.country || undefined,
       synopsis: form.synopsis || undefined,
       thumbnail_url: form.thumbnail_url || undefined,
       banner_url: form.banner_url || undefined,
@@ -92,6 +96,7 @@ export function SeriesPage() {
       original_title: s.original_title ?? '',
       director: s.director ?? '',
       year: s.year, language: s.language,
+      country: s.country ?? '',
       synopsis: s.synopsis ?? '',
       thumbnail_url: s.thumbnail_url ?? '', banner_url: s.banner_url ?? '',
       trailer_url: s.trailer_url ?? '',
@@ -245,6 +250,13 @@ export function SeriesPage() {
                     <option value="sw">Swahili</option>
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="label">Pays d'origine</label>
+                <select className="input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
+                  <option value="">— Sélectionner —</option>
+                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
               <div>
                 <label className="label">Créateur / Réalisateur</label>

@@ -79,8 +79,18 @@ export function UserContentDrawer({ user, onClose }: Props) {
             {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-gray-100 font-semibold truncate">{name}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-gray-100 font-semibold truncate">{name}</p>
+              <span className={clsx('badge text-xs shrink-0', user.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400')}>
+                {user.is_active ? 'Actif' : user.is_deleted ? 'Supprimé' : 'Inactif'}
+              </span>
+            </div>
             <p className="text-gray-500 text-xs truncate">{user.email}</p>
+            {!user.is_active && (user.is_deleted ? user.deletion_reason : user.deactivation_reason) && (
+              <p className="text-amber-400/80 text-xs mt-1">
+                Raison : {user.is_deleted ? user.deletion_reason : user.deactivation_reason}
+              </p>
+            )}
           </div>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />

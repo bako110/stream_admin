@@ -1,6 +1,6 @@
 export type UserRole = 'user' | 'artist' | 'manager' | 'admin'
 
-export type ReportContentType = 'reel' | 'event' | 'concert' | 'comment'
+export type ReportContentType = 'reel' | 'event' | 'concert' | 'comment' | 'post' | 'live'
 export type ReportReason = 'spam' | 'inappropriate' | 'violence' | 'harassment' | 'misinformation' | 'other'
 export type ReportStatus = 'pending' | 'resolved' | 'dismissed'
 
@@ -135,6 +135,10 @@ export interface User {
   verification_note?: string | null
   verification_requested_at?: string | null
   created_at: string
+  is_deleted?: boolean
+  deleted_at?: string | null
+  deactivation_reason?: string | null
+  deletion_reason?: string | null
 }
 
 export type ContentStatus = 'draft' | 'published' | 'archived'

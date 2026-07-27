@@ -8,6 +8,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload'
 import { VideoUpload } from '@/components/ui/VideoUpload'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Content } from '@/types'
+import { COUNTRIES } from '@/lib/countries'
 import { Plus, Trash2, Globe, Edit2, Film, Lock, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -21,13 +22,6 @@ const GENRES = [
   'Action', 'Aventure', 'Animation', 'Comédie', 'Documentaire',
   'Drame', 'Fantastique', 'Horreur', 'Musical', 'Romance',
   'Science-Fiction', 'Thriller', 'Western', 'Policier', 'Historique',
-]
-
-const COUNTRIES = [
-  'Sénégal', 'Côte d\'Ivoire', 'Mali', 'Cameroun', 'Nigeria',
-  'Ghana', 'Maroc', 'Algérie', 'Tunisie', 'Égypte',
-  'Afrique du Sud', 'Kenya', 'France', 'États-Unis', 'Royaume-Uni',
-  'Inde', 'Brésil', 'Mexique', 'Chine', 'Japon', 'Corée du Sud',
 ]
 
 const EMPTY = {

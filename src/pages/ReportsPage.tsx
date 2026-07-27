@@ -5,7 +5,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ReportDetailDrawer } from '@/components/ui/ReportDetailDrawer'
 import type { Report, ReportContentType } from '@/types'
 import { useAuth } from '@/contexts/AuthContext'
-import { Trash2, CheckCircle, RefreshCw, Video, Calendar, Music, MessageSquare, ShieldBan } from 'lucide-react'
+import { Trash2, CheckCircle, RefreshCw, Video, Calendar, Music, MessageSquare, ShieldBan, FileText, Radio } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_TABS = [
@@ -29,6 +29,8 @@ const CONTENT_TYPE_ICON: Record<ReportContentType, typeof Video> = {
   event:   Calendar,
   concert: Music,
   comment: MessageSquare,
+  post:    FileText,
+  live:    Radio,
 }
 
 export function ReportsPage() {
@@ -163,7 +165,7 @@ interface ReportRowProps {
 }
 
 function ReportRow({ report, isAdmin, onClick, onDelete, onDismiss }: ReportRowProps) {
-  const Icon = CONTENT_TYPE_ICON[report.content_type]
+  const Icon = CONTENT_TYPE_ICON[report.content_type] ?? FileText
   const isBlocked = report.content_preview?.is_blocked ?? false
 
   return (
