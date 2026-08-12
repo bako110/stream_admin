@@ -1,7 +1,13 @@
 import axios from 'axios'
+import { Capacitor } from '@capacitor/core'
+
+// En web, /api/v1 est relatif à l'origine courante (nginx proxy vers le
+// backend). Dans l'app native, l'origine est capacitor://localhost — il n'y
+// a pas de proxy, il faut l'URL absolue du backend.
+const API_BASE = Capacitor.isNativePlatform() ? 'https://gofolyx.com/api/v1' : '/api/v1'
 
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -26,7 +32,7 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem('refresh_token')
       if (refresh) {
         try {
-          const { data } = await axios.post('/api/v1/auth/refresh', { refresh_token: refresh })
+          const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refresh_token: refresh })
           localStorage.setItem('access_token', data.access_token)
           error.config.headers.Authorization = `Bearer ${data.access_token}`
           return api.request(error.config)

@@ -3,18 +3,28 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
+// Build natif (Capacitor) : servi depuis capacitor://localhost, pas de
+// sous-chemin /admin/ ni de proxy nginx — voir capacitor.config.ts et
+// npm run build:capacitor.
+const isCapacitor = process.env.CAPACITOR_BUILD === 'true'
+
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // Aucune utilité dans l'app native (pas de navigateur, pas d'"installer
+      // à l'écran d'accueil") — un service worker enregistré dans la WebView
+      // Capacitor peut aussi intercepter les requêtes et servir un cache
+      // vide/périmé, causant un écran blanc silencieux au premier lancement.
+      disable: isCapacitor,
       registerType: 'autoUpdate',
-      base: '/admin/',
+      base: isCapacitor ? '/' : '/admin/',
       manifest: {
         name: 'GoFolyX Admin',
         short_name: 'GFX Admin',
         description: "Panel d'administration GoFolyX",
-        start_url: '/admin/',
-        scope: '/admin/',
+        start_url: isCapacitor ? '/' : '/admin/',
+        scope: isCapacitor ? '/' : '/admin/',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#0d0118',
@@ -31,7 +41,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/admin/',
+  base: isCapacitor ? '/' : '/admin/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

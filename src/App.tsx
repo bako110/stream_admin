@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Capacitor } from '@capacitor/core'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AdminOnlyRoute } from '@/components/AdminOnlyRoute'
@@ -27,11 +28,16 @@ const queryClient = new QueryClient({
   },
 })
 
+// App native : servie à la racine (https://localhost/), pas sous /admin/
+// comme en prod web (nginx). Sans ce basename conditionnel, aucune route ne
+// matche jamais dans l'app installée — écran vide, sans erreur ni crash.
+const basename = Capacitor.isNativePlatform() ? '/' : '/admin'
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter basename="/admin">
+        <BrowserRouter basename={basename}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route
