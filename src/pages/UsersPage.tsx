@@ -61,7 +61,7 @@ export function UsersPage() {
   const filtered = users.filter(u => {
     const q = search.toLowerCase()
     return (
-      u.email.toLowerCase().includes(q) ||
+      (u.email ?? '').toLowerCase().includes(q) ||
       (u.username ?? '').toLowerCase().includes(q) ||
       (u.first_name ?? '').toLowerCase().includes(q) ||
       (u.last_name ?? '').toLowerCase().includes(q)
@@ -187,11 +187,11 @@ function UserRow({ user, isAdmin, onViewContent, onActivate, onDeactivate, onDel
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center text-violet-400 text-xs font-bold uppercase shrink-0">
-            {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
+            {(user.first_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
           </div>
           <div>
             <p className="text-gray-100 font-medium">{name}</p>
-            <p className="text-gray-500 text-xs">{user.email}</p>
+            <p className="text-gray-500 text-xs">{user.email ?? '—'}</p>
           </div>
         </div>
       </td>
