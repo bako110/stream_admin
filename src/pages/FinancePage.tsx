@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useQuery, useInfiniteQuery, useMutation } from '@tanstack/react-query'
 import { financeService, TransactionDetail, RevenueData } from '@/services/finance.service'
 import { useInfiniteScrollSentinel } from '@/hooks/useInfiniteScrollSentinel'
@@ -242,8 +242,11 @@ function RevenueSection() {
     queryFn: () => financeService.getRevenue(token!),
     enabled: !!token,
     retry: false,
-    onError: () => { sessionStorage.removeItem('revenue_token'); setToken(null) },
   })
+
+  useEffect(() => {
+    if (isError) { sessionStorage.removeItem('revenue_token'); setToken(null) }
+  }, [isError])
 
   const fmt  = (n: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const fmtK = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k €` : `${fmt(n)} €`
@@ -425,7 +428,7 @@ function KpiCard({ label, value, sub, icon: Icon, color }: {
 }
 
 export function FinancePage() {
-  const [tab, setTab] = useState<'transactions' | 'withdrawals'>('transactions')
+  const [tab, setTab] = useState<'transactions' | 'withdrawals' | 'revenue'>('transactions')
   const [txType, setTxType] = useState('')
   const [txStatus, setTxStatus] = useState('')
   const [txSearch, setTxSearch] = useState('')

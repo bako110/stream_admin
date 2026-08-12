@@ -23,6 +23,8 @@ export interface Transaction {
 
 export interface TransactionDetail extends Transaction {
   user: { id: string | null; email: string; name: string; username: string | null }
+  reference_id: string | null
+  updated_at: string | null
 }
 
 export interface TransactionList {

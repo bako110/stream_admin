@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext'
-import { X, ShieldBan, Trash2, CheckCircle, Video, Calendar, Music, MessageSquare, AlertTriangle } from 'lucide-react'
+import { X, ShieldBan, Trash2, CheckCircle, Video, Calendar, Music, MessageSquare, AlertTriangle, FileText, Radio } from 'lucide-react'
 import clsx from 'clsx'
 import type { Report, ReportContentType } from '@/types'
 
@@ -17,6 +17,8 @@ const CONTENT_TYPE_ICON: Record<ReportContentType, typeof Video> = {
   event:   Calendar,
   concert: Music,
   comment: MessageSquare,
+  post:    FileText,
+  live:    Radio,
 }
 
 const CONTENT_TYPE_LABEL: Record<ReportContentType, string> = {
@@ -24,6 +26,8 @@ const CONTENT_TYPE_LABEL: Record<ReportContentType, string> = {
   event:   'Événement',
   concert: 'Concert',
   comment: 'Commentaire',
+  post:    'Post',
+  live:    'Live',
 }
 
 interface Props {
