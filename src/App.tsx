@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { AdminOnlyRoute } from '@/components/AdminOnlyRoute'
 import { AdminLayout } from '@/components/layout/AdminLayout'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
@@ -47,13 +48,13 @@ export default function App() {
               <Route path="content/series" element={<SeriesPage />} />
               <Route path="content/seasons" element={<SeasonsPage />} />
               <Route path="content/episodes" element={<EpisodesPage />} />
-              <Route path="managers" element={<ManagersPage />} />
+              <Route path="managers" element={<AdminOnlyRoute><ManagersPage /></AdminOnlyRoute>} />
               <Route path="verification" element={<VerificationPage />} />
               <Route path="monetization" element={<MonetizationPage />} />
               <Route path="communities" element={<CommunitiesPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="feedback" element={<FeedbackPage />} />
-              <Route path="finance" element={<FinancePage />} />
+              <Route path="finance" element={<AdminOnlyRoute><FinancePage /></AdminOnlyRoute>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
             </Route>

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { contentService } from '@/services/content.service'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   Users, Film, Tv, Music2, CalendarDays, Play,
   CreditCard, BadgeCheck, Layers, ArrowRight,
@@ -9,6 +10,8 @@ import clsx from 'clsx'
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isManager = user?.role === 'manager'
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
@@ -31,15 +34,17 @@ export function DashboardPage() {
 
       {/* Ligne 1 — chiffres clés */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Utilisateurs"
-          value={data?.users}
-          icon={Users}
-          color="text-blue-400"
-          bg="bg-blue-500/10"
-          loading={loading}
-          onClick={() => navigate('/users')}
-        />
+        {!isManager && (
+          <KpiCard
+            label="Utilisateurs"
+            value={data?.users}
+            icon={Users}
+            color="text-blue-400"
+            bg="bg-blue-500/10"
+            loading={loading}
+            onClick={() => navigate('/users')}
+          />
+        )}
         <KpiCard
           label="Abonnés actifs"
           value={data?.subscriptions}
@@ -129,14 +134,16 @@ export function DashboardPage() {
             bg="bg-pink-500/10"
             onClick={() => navigate('/content/series')}
           />
-          <ShortcutCard
-            label="Utilisateurs"
-            desc="Comptes, rôles, accès"
-            icon={Users}
-            color="text-blue-400"
-            bg="bg-blue-500/10"
-            onClick={() => navigate('/users')}
-          />
+          {!isManager && (
+            <ShortcutCard
+              label="Utilisateurs"
+              desc="Comptes, rôles, accès"
+              icon={Users}
+              color="text-blue-400"
+              bg="bg-blue-500/10"
+              onClick={() => navigate('/users')}
+            />
+          )}
         </div>
       </div>
 
