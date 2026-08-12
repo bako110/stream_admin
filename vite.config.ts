@@ -1,9 +1,36 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      base: '/admin/',
+      manifest: {
+        name: 'GoFolyX Admin',
+        short_name: 'GFX Admin',
+        description: "Panel d'administration GoFolyX",
+        start_url: '/admin/',
+        scope: '/admin/',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#0d0118',
+        theme_color: '#7B3FF2',
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg}'],
+      },
+    }),
+  ],
   base: '/admin/',
   resolve: {
     alias: {
