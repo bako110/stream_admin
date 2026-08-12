@@ -87,7 +87,17 @@ export const usersService = {
     password: string
     username?: string
   }): Promise<User> {
-    const { data } = await api.post<User>('/auth/register', payload)
+    // /auth/register exige aussi date_of_birth/gender (profil utilisateur) et
+    // form_started_at/device_fingerprint (anti-bot du formulaire public) —
+    // sans objet ici : la création vient d'un admin authentifié, pas d'un
+    // visiteur anonyme. Valeurs neutres pour satisfaire le schéma.
+    const { data } = await api.post<User>('/auth/register', {
+      ...payload,
+      date_of_birth: '2000-01-01',
+      gender: 'prefer_not_to_say',
+      form_started_at: Date.now() - 5000,
+      device_fingerprint: 'admin-panel',
+    })
     await api.put(`/users/${data.id}/role`, null, { params: { role: 'manager' } })
     return data
   },
