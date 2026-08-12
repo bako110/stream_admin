@@ -100,11 +100,14 @@ export function CommunitiesPage() {
   const target = detail ?? selected
 
   return (
-    <div className="flex gap-5 h-[calc(100vh-4rem)]">
+    <div className="flex flex-col md:flex-row gap-5 md:h-[calc(100vh-4rem)]">
 
       {/* ── Liste ── */}
-      <div className={clsx('flex flex-col gap-4 overflow-hidden', selected ? 'w-96 shrink-0' : 'flex-1')}>
-        <div className="flex items-center justify-between">
+      <div className={clsx(
+        'flex-col gap-4 overflow-hidden',
+        selected ? 'hidden md:flex md:w-96 md:shrink-0' : 'flex flex-1'
+      )}>
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-violet-500/15 flex items-center justify-center">
               <Users className="w-5 h-5 text-violet-400" />
@@ -183,7 +186,7 @@ export function CommunitiesPage() {
 
       {/* ── Détail ── */}
       {selected && (
-        <div className="flex-1 overflow-y-auto space-y-5 pb-10">
+        <div className="flex-1 overflow-y-auto space-y-5 pb-10 min-h-0">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-white">Détail</h3>
             <button onClick={() => setSelected(null)} className="btn-ghost p-2"><X className="w-4 h-4" /></button>

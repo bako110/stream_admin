@@ -1,8 +1,11 @@
 import { useState, useRef } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation } from '@tanstack/react-query'
 import { financeService, TransactionDetail, RevenueData } from '@/services/finance.service'
-import { TrendingUp, TrendingDown, Wallet, Users, ArrowDownCircle, CreditCard, Search, X, ChevronRight, Copy, Check, ExternalLink, Lock, Eye, EyeOff, Building2, AlertTriangle } from 'lucide-react'
+import { useInfiniteScrollSentinel } from '@/hooks/useInfiniteScrollSentinel'
+import { TrendingUp, TrendingDown, Wallet, Users, ArrowDownCircle, CreditCard, Search, X, ChevronRight, Copy, Check, ExternalLink, Lock, Eye, EyeOff, Building2, AlertTriangle, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
+
+const PAGE_SIZE = 50
 
 const TX_TYPE_LABELS: Record<string, string> = {
   credit_purchase:      'Achat coins',
@@ -101,10 +104,10 @@ function TransactionDrawer({ txId, onClose }: { txId: string; onClose: () => voi
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 w-[420px] bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
+      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[420px] bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold text-white">Détail de la transaction</h2>
             {data && (
               <p className="text-xs text-gray-500 font-mono mt-0.5 flex items-center gap-1">
@@ -423,13 +426,11 @@ function KpiCard({ label, value, sub, icon: Icon, color }: {
 
 export function FinancePage() {
   const [tab, setTab] = useState<'transactions' | 'withdrawals'>('transactions')
-  const [txPage, setTxPage] = useState(1)
   const [txType, setTxType] = useState('')
   const [txStatus, setTxStatus] = useState('')
   const [txSearch, setTxSearch] = useState('')
   const [txSearchInput, setTxSearchInput] = useState('')
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
-  const [wPage, setWPage] = useState(1)
   const [wStatus, setWStatus] = useState('')
 
   const { data: overview, isLoading: ovLoading } = useQuery({
@@ -438,17 +439,33 @@ export function FinancePage() {
     staleTime: 60_000,
   })
 
-  const { data: transactions, isLoading: txLoading } = useQuery({
-    queryKey: ['finance-transactions', txPage, txType, txStatus, txSearch],
-    queryFn: () => financeService.getTransactions(txPage, 50, txType || undefined, txStatus || undefined, txSearch || undefined),
+  const {
+    data: txData, isLoading: txLoading,
+    fetchNextPage: fetchNextTxPage, hasNextPage: hasNextTxPage, isFetchingNextPage: isFetchingNextTxPage,
+  } = useInfiniteQuery({
+    queryKey: ['finance-transactions', txType, txStatus, txSearch],
+    queryFn: ({ pageParam }) => financeService.getTransactions(pageParam, PAGE_SIZE, txType || undefined, txStatus || undefined, txSearch || undefined),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      allPages.flatMap(p => p.items).length < lastPage.total ? allPages.length + 1 : undefined,
     enabled: tab === 'transactions',
   })
+  const transactions = txData ? { items: txData.pages.flatMap(p => p.items), total: txData.pages[0]?.total ?? 0 } : undefined
+  const txSentinelRef = useInfiniteScrollSentinel(() => fetchNextTxPage(), !!hasNextTxPage && !isFetchingNextTxPage)
 
-  const { data: withdrawals, isLoading: wLoading } = useQuery({
-    queryKey: ['finance-withdrawals', wPage, wStatus],
-    queryFn: () => financeService.getWithdrawals(wPage, 50, wStatus || undefined),
+  const {
+    data: wData, isLoading: wLoading,
+    fetchNextPage: fetchNextWPage, hasNextPage: hasNextWPage, isFetchingNextPage: isFetchingNextWPage,
+  } = useInfiniteQuery({
+    queryKey: ['finance-withdrawals', wStatus],
+    queryFn: ({ pageParam }) => financeService.getWithdrawals(pageParam, PAGE_SIZE, wStatus || undefined),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      allPages.flatMap(p => p.items).length < lastPage.total ? allPages.length + 1 : undefined,
     enabled: tab === 'withdrawals',
   })
+  const withdrawals = wData ? { items: wData.pages.flatMap(p => p.items), total: wData.pages[0]?.total ?? 0 } : undefined
+  const wSentinelRef = useInfiniteScrollSentinel(() => fetchNextWPage(), !!hasNextWPage && !isFetchingNextWPage)
 
   const fmt = (n: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const fmtCoins = (n: number) => n.toLocaleString('fr-FR')
@@ -523,7 +540,7 @@ export function FinancePage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-800">
+      <div className="flex gap-1 border-b border-gray-800 overflow-x-auto">
         {TABS.map(t => (
           <button
             key={t.key}
@@ -549,19 +566,19 @@ export function FinancePage() {
           <div className="flex flex-wrap gap-2">
             {/* Recherche par ID de transaction */}
             <form
-              className="flex items-center gap-1"
-              onSubmit={e => { e.preventDefault(); setTxSearch(txSearchInput.trim()); setTxPage(1) }}
+              className="flex items-center gap-1 w-full sm:w-auto"
+              onSubmit={e => { e.preventDefault(); setTxSearch(txSearchInput.trim()) }}
             >
-              <div className="relative">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
                 <input
-                  className="input pl-8 pr-8 w-72 text-sm font-mono"
+                  className="input pl-8 pr-8 w-full sm:w-72 text-sm font-mono"
                   placeholder="Ex: TXN-2505-A3K9F2"
                   value={txSearchInput}
                   onChange={e => setTxSearchInput(e.target.value)}
                 />
                 {txSearchInput && (
-                  <button type="button" onClick={() => { setTxSearchInput(''); setTxSearch(''); setTxPage(1) }}
+                  <button type="button" onClick={() => { setTxSearchInput(''); setTxSearch('') }}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -570,11 +587,11 @@ export function FinancePage() {
               <button type="submit" className="btn-ghost py-1.5 px-3 text-xs">Chercher</button>
             </form>
 
-            <select className="input w-48 text-sm" value={txType} onChange={e => { setTxType(e.target.value); setTxPage(1) }}>
+            <select className="input w-full sm:w-48 text-sm" value={txType} onChange={e => setTxType(e.target.value)}>
               <option value="">Tous les types</option>
               {TX_TYPES.map(t => <option key={t} value={t}>{TX_TYPE_LABELS[t]}</option>)}
             </select>
-            <select className="input w-40 text-sm" value={txStatus} onChange={e => { setTxStatus(e.target.value); setTxPage(1) }}>
+            <select className="input w-full sm:w-40 text-sm" value={txStatus} onChange={e => setTxStatus(e.target.value)}>
               <option value="">Tous les statuts</option>
               <option value="completed">Complété</option>
               <option value="pending">En attente</option>
@@ -589,9 +606,49 @@ export function FinancePage() {
             {transactions && <p className="text-xs text-gray-500 self-center ml-auto">{transactions.total.toLocaleString('fr-FR')} transaction{transactions.total !== 1 ? 's' : ''}</p>}
           </div>
 
-          <div className="card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+          {/* Cartes — mobile uniquement */}
+          <div className="md:hidden space-y-2">
+            {txLoading ? (
+              Array.from({ length: 6 }).map((_, i) => <div key={i} className="card p-3 animate-pulse h-16" />)
+            ) : (transactions?.items ?? []).length === 0 ? (
+              <div className="card p-12 text-center text-gray-500">Aucune transaction</div>
+            ) : (transactions?.items ?? []).map(tx => (
+              <button
+                key={tx.id}
+                onClick={() => setSelectedTxId(tx.id)}
+                className={clsx(
+                  'card w-full text-left p-3 space-y-2',
+                  txSearch && transactions?.total === 1 && 'ring-1 ring-inset ring-violet-500/30 bg-violet-500/5'
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-200 text-xs font-medium truncate">{tx.user.name}</p>
+                    <p className="text-gray-500 text-xs truncate">{tx.user.email}</p>
+                  </div>
+                  <div className={clsx('text-right shrink-0 font-mono text-xs', tx.gogold_amount >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                    {tx.gogold_amount >= 0 ? '+' : ''}{fmtCoins(tx.gogold_amount)}
+                    {tx.eur_amount != null && <p className="text-gray-500">{fmt(tx.eur_amount)} €</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={clsx('badge text-xs', TX_TYPE_COLORS[tx.type] ?? 'bg-gray-700 text-gray-300')}>
+                    {TX_TYPE_LABELS[tx.type] ?? tx.type}
+                  </span>
+                  <span className={clsx('badge text-xs', STATUS_COLORS[tx.status] ?? 'bg-gray-700 text-gray-300')}>
+                    {tx.status}
+                  </span>
+                  <span className="text-gray-600 text-[10px] ml-auto whitespace-nowrap">
+                    {new Date(tx.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Table — desktop uniquement */}
+          <div className="card overflow-hidden hidden md:block">
+            <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-800 text-left">
                     <th className="px-4 py-3 text-gray-400 font-medium">Utilisateur</th>
@@ -650,16 +707,15 @@ export function FinancePage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
-            {transactions && transactions.total > 50 && (
-              <div className="px-4 py-3 border-t border-gray-800 flex items-center gap-2 justify-end">
-                <button disabled={txPage <= 1} onClick={() => setTxPage(p => p - 1)} className="btn-ghost py-1 px-3 text-xs disabled:opacity-40">Précédent</button>
-                <span className="text-xs text-gray-500">{txPage} / {Math.ceil(transactions.total / 50)}</span>
-                <button disabled={txPage >= Math.ceil(transactions.total / 50)} onClick={() => setTxPage(p => p + 1)} className="btn-ghost py-1 px-3 text-xs disabled:opacity-40">Suivant</button>
-              </div>
-            )}
+            </table>
           </div>
+
+          {/* Sentinel — déclenche le chargement de la page suivante */}
+          {!txLoading && (transactions?.items.length ?? 0) > 0 && (
+            <div ref={txSentinelRef} className="flex items-center justify-center py-4">
+              {isFetchingNextTxPage && <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />}
+            </div>
+          )}
         </div>
       )}
 
@@ -670,7 +726,7 @@ export function FinancePage() {
       {tab === 'withdrawals' && (
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
-            <select className="input w-40 text-sm" value={wStatus} onChange={e => { setWStatus(e.target.value); setWPage(1) }}>
+            <select className="input w-full sm:w-40 text-sm" value={wStatus} onChange={e => setWStatus(e.target.value)}>
               <option value="">Tous les statuts</option>
               <option value="pending">En attente</option>
               <option value="processing">En cours</option>
@@ -680,9 +736,41 @@ export function FinancePage() {
             {withdrawals && <p className="text-xs text-gray-500 self-center ml-auto">{withdrawals.total} retrait{withdrawals.total !== 1 ? 's' : ''}</p>}
           </div>
 
-          <div className="card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+          {/* Cartes — mobile uniquement */}
+          <div className="md:hidden space-y-2">
+            {wLoading ? (
+              Array.from({ length: 5 }).map((_, i) => <div key={i} className="card p-3 animate-pulse h-16" />)
+            ) : (withdrawals?.items ?? []).length === 0 ? (
+              <div className="card p-12 text-center text-gray-500">Aucun retrait</div>
+            ) : (withdrawals?.items ?? []).map(w => (
+              <div key={w.id} className="card p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-200 text-xs font-medium truncate">{w.user.name}</p>
+                    <p className="text-gray-500 text-xs truncate">{w.user.email}</p>
+                  </div>
+                  <div className="text-right shrink-0 font-mono text-xs">
+                    <p className="text-orange-400">{fmtCoins(w.gogold_amount)}</p>
+                    <p className="text-gray-200">{fmt(w.eur_amount)} €</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={clsx('badge text-xs', STATUS_COLORS[w.status] ?? 'bg-gray-700 text-gray-300')}>
+                    {w.status}
+                  </span>
+                  {w.payout_method && <span className="text-gray-500 text-xs">{w.payout_method}</span>}
+                  <span className="text-gray-600 text-[10px] ml-auto whitespace-nowrap">
+                    {new Date(w.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </span>
+                </div>
+                {w.admin_note && <p className="text-gray-500 text-xs">{w.admin_note}</p>}
+              </div>
+            ))}
+          </div>
+
+          {/* Table — desktop uniquement */}
+          <div className="card overflow-hidden hidden md:block">
+            <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-800 text-left">
                     <th className="px-4 py-3 text-gray-400 font-medium">Utilisateur</th>
@@ -722,16 +810,15 @@ export function FinancePage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
-            {withdrawals && withdrawals.total > 50 && (
-              <div className="px-4 py-3 border-t border-gray-800 flex items-center gap-2 justify-end">
-                <button disabled={wPage <= 1} onClick={() => setWPage(p => p - 1)} className="btn-ghost py-1 px-3 text-xs disabled:opacity-40">Précédent</button>
-                <span className="text-xs text-gray-500">{wPage} / {Math.ceil(withdrawals.total / 50)}</span>
-                <button disabled={wPage >= Math.ceil(withdrawals.total / 50)} onClick={() => setWPage(p => p + 1)} className="btn-ghost py-1 px-3 text-xs disabled:opacity-40">Suivant</button>
-              </div>
-            )}
+            </table>
           </div>
+
+          {/* Sentinel — déclenche le chargement de la page suivante */}
+          {!wLoading && (withdrawals?.items.length ?? 0) > 0 && (
+            <div ref={wSentinelRef} className="flex items-center justify-center py-4">
+              {isFetchingNextWPage && <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />}
+            </div>
+          )}
         </div>
       )}
     </div>

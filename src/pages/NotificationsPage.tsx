@@ -206,7 +206,7 @@ export function NotificationsPage() {
         {mode === 'app_update' && (
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-400">Plateforme ciblée</label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(['android', 'ios', 'all'] as AppUpdatePlatform[]).map(p => (
                 <button
                   key={p}

@@ -93,9 +93,12 @@ export function SupportPage() {
       </div>
 
       {/* Layout split */}
-      <div className="flex gap-4 h-[calc(100vh-220px)]">
+      <div className="flex flex-col md:flex-row gap-4 md:h-[calc(100vh-220px)]">
         {/* Liste tickets */}
-        <div className="w-80 shrink-0 flex flex-col gap-2 overflow-y-auto pr-1">
+        <div className={clsx(
+          'flex-col gap-2 overflow-y-auto pr-1 md:w-80 md:shrink-0',
+          active ? 'hidden md:flex' : 'flex'
+        )}>
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="card p-4 animate-pulse">
@@ -126,7 +129,7 @@ export function SupportPage() {
         </div>
 
         {/* Fil de conversation */}
-        <div className="flex-1 min-w-0">
+        <div className={clsx('flex-1 min-w-0 min-h-0', !active && 'hidden md:block')}>
           {active && activeTicket ? (
             <ConversationPanel
               ticket={activeTicket}

@@ -178,7 +178,7 @@ export function ManagersPage() {
             <div className="px-6 py-4">
               <div className="flex items-center gap-3 mb-5 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                 <div className="w-9 h-9 rounded-full bg-blue-600/20 flex items-center justify-center text-blue-400 text-sm font-bold uppercase shrink-0">
-                  {(pwdModal.first_name?.[0] ?? pwdModal.email[0]).toUpperCase()}
+                  {(pwdModal.first_name?.[0] ?? pwdModal.email?.[0] ?? '?').toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-200 truncate">
@@ -234,7 +234,7 @@ export function ManagersPage() {
 
 function ManagerRow({ manager, onChangePassword }: { manager: User; onChangePassword: () => void }) {
   const name = [manager.first_name, manager.last_name].filter(Boolean).join(' ') || manager.username || manager.email
-  const initials = (manager.first_name?.[0] ?? manager.email[0]).toUpperCase()
+  const initials = (manager.first_name?.[0] ?? manager.email?.[0] ?? '?').toUpperCase()
 
   return (
     <li className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800/60 border border-gray-700/50 hover:border-gray-600 transition-colors">

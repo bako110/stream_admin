@@ -310,7 +310,7 @@ interface VerifCardProps {
 
 function VerifCard({ user, expanded, onToggle, rejectNote, onRejectNoteChange, onApprove, onReject, loading }: VerifCardProps) {
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || '—'
-  const initial = (user.first_name?.[0] ?? user.email[0]).toUpperCase()
+  const initial = (user.first_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()
   const requestedAt = user.verification_requested_at
     ? new Date(user.verification_requested_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : '—'

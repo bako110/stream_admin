@@ -118,17 +118,17 @@ export function EpisodesPage() {
   return (
     <div className="space-y-4">
       {/* En-tête */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {paramSerieId ? (
           <button
             onClick={() => navigate(`/content/seasons?serieId=${paramSerieId}&title=${encodeURIComponent(displayTitle)}`)}
-            className="p-1.5 text-gray-400 hover:text-gray-200 transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-200 transition-colors shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         ) : null}
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-gray-100">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg font-semibold text-gray-100 truncate">
             Épisodes{displayTitle ? ` — ${displayTitle}` : ''}
             {selectedSeason ? ` · Saison ${selectedSeason}` : ''}
           </h2>
@@ -159,7 +159,7 @@ export function EpisodesPage() {
         </div>
 
         {seasons.length > 0 && (
-          <div className="w-52">
+          <div className="w-full sm:w-52">
             <label className="label">Saison</label>
             <div className="relative">
               <select
@@ -189,8 +189,50 @@ export function EpisodesPage() {
           <p className="text-gray-600 text-sm">Créez d'abord une saison depuis la page <button onClick={() => navigate(`/content/seasons?serieId=${selectedSerieId}`)} className="text-violet-400 hover:underline">Saisons</button></p>
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          {/* Cartes — mobile uniquement */}
+          <div className="md:hidden space-y-3">
+            {epLoading ? (
+              Array.from({ length: 4 }).map((_, i) => <div key={i} className="card p-4 animate-pulse h-20" />)
+            ) : episodes.length === 0 ? (
+              <div className="card p-12 text-center text-gray-500">Aucun épisode dans cette saison</div>
+            ) : episodes.map(ep => (
+              <div key={ep.id} className="card p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  {ep.thumbnail_url ? (
+                    <img src={ep.thumbnail_url} alt="" className="w-16 h-9 object-cover rounded shrink-0" />
+                  ) : (
+                    <div className="w-16 h-9 rounded bg-gray-800 shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-100 font-medium truncate">
+                      <span className="text-gray-500 font-mono text-xs mr-1.5">{String(ep.number).padStart(2, '0')}</span>
+                      {ep.title}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-0.5">
+                      {ep.duration_sec ? `${Math.floor(ep.duration_sec / 60)} min` : '—'} · {ep.view_count.toLocaleString('fr-FR')} vues
+                    </p>
+                  </div>
+                  <span className={clsx('badge shrink-0', ep.is_free ? 'bg-emerald-500/15 text-emerald-400' : 'bg-violet-500/15 text-violet-400')}>
+                    {ep.is_free ? 'Gratuit' : 'Premium'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-end gap-1 pt-2 border-t border-gray-800">
+                  <button onClick={() => openEdit(ep)} className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  {isAdmin && (
+                    <button onClick={() => setToDelete(ep)} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table — desktop uniquement */}
+          <div className="card overflow-hidden hidden md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-left">
@@ -251,7 +293,7 @@ export function EpisodesPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </>
       )}
 
       {showForm && (

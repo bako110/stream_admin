@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { contentService } from '@/services/content.service'
 import { Drawer } from '@/components/ui/Drawer'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { VideoUpload } from '@/components/ui/VideoUpload'
 import { useAuth } from '@/contexts/AuthContext'
+import { useInfiniteScrollSentinel } from '@/hooks/useInfiniteScrollSentinel'
 import type { Content } from '@/types'
 import { COUNTRIES } from '@/lib/countries'
-import { Plus, Trash2, Globe, Edit2, Film, Lock, ArrowLeft } from 'lucide-react'
+import { Plus, Trash2, Globe, Edit2, Film, Lock, ArrowLeft, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
+
+const PAGE_SIZE = 20
 
 const STATUS_COLORS = {
   draft: 'bg-gray-700 text-gray-300',
@@ -38,16 +41,20 @@ export function FilmsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
-  const [page, setPage] = useState(1)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Content | null>(null)
   const [toDelete, setToDelete] = useState<Content | null>(null)
   const [form, setForm] = useState(EMPTY)
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['films', page],
-    queryFn: () => contentService.listFilmsAdmin(page, 20),
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ['films'],
+    queryFn: ({ pageParam }) => contentService.listFilmsAdmin(pageParam, PAGE_SIZE),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      allPages.flatMap(p => p.items).length < lastPage.total ? allPages.length + 1 : undefined,
   })
+
+  const sentinelRef = useInfiniteScrollSentinel(() => fetchNextPage(), !!hasNextPage && !isFetchingNextPage)
 
   const mutCreate = useMutation({
     mutationFn: async () => {
@@ -143,27 +150,45 @@ export function FilmsPage() {
 
   function closeForm() { setShowForm(false); setEditing(null) }
 
-  const films = data?.items ?? []
-  const totalPages = data ? Math.ceil(data.total / 20) : 1
+  const films = data?.pages.flatMap(p => p.items) ?? []
+  const total = data?.pages[0]?.total ?? 0
   const isPending = mutCreate.isPending || mutUpdate.isPending
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 text-gray-400 hover:text-gray-200 transition-colors">
+          <button onClick={() => navigate(-1)} className="p-1.5 text-gray-400 hover:text-gray-200 transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <p className="text-gray-400 text-sm">{data?.total ?? 0} film{(data?.total ?? 0) !== 1 ? 's' : ''}</p>
+          <p className="text-gray-400 text-sm">{total} film{total !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={openCreate} className="btn-primary">
           <Plus className="w-4 h-4" />Ajouter un film
         </button>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      {/* Cartes — mobile uniquement */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <div key={i} className="card p-4 animate-pulse h-24" />)
+        ) : films.length === 0 ? (
+          <div className="card p-12 text-center text-gray-500">Aucun film</div>
+        ) : films.map(film => (
+          <FilmCard
+            key={film.id}
+            film={film}
+            canEdit={isAdmin || film.added_by === user?.id}
+            onPublish={() => mutPublish.mutate(film.id)}
+            onEdit={() => openEdit(film)}
+            onDelete={() => setToDelete(film)}
+          />
+        ))}
+      </div>
+
+      {/* Table — desktop uniquement */}
+      <div className="card overflow-hidden hidden md:block">
+        <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-800 text-left">
                 <th className="px-4 py-3 text-gray-400 font-medium">Film</th>
@@ -242,16 +267,15 @@ export function FilmsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
-        {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-800 flex items-center gap-2 justify-end">
-            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="btn-ghost py-1 px-3 text-xs disabled:opacity-40">Précédent</button>
-            <span className="text-xs text-gray-500">{page} / {totalPages}</span>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="btn-ghost py-1 px-3 text-xs disabled:opacity-40">Suivant</button>
-          </div>
-        )}
+        </table>
       </div>
+
+      {/* Sentinel — déclenche le chargement de la page suivante */}
+      {!isLoading && films.length > 0 && (
+        <div ref={sentinelRef} className="flex items-center justify-center py-4">
+          {isFetchingNextPage && <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />}
+        </div>
+      )}
 
       {showForm && (
         <Drawer title={editing ? 'Modifier le film' : 'Ajouter un film'} onClose={closeForm}>
@@ -393,6 +417,62 @@ export function FilmsPage() {
           onCancel={() => setToDelete(null)}
         />
       )}
+    </div>
+  )
+}
+
+function FilmCard({
+  film, canEdit, onPublish, onEdit, onDelete,
+}: {
+  film: Content; canEdit: boolean; onPublish: () => void; onEdit: () => void; onDelete: () => void
+}) {
+  return (
+    <div className="card p-4 space-y-3">
+      <div className="flex items-center gap-3">
+        {film.thumbnail_url ? (
+          <img src={film.thumbnail_url} alt="" className="w-12 h-16 object-cover rounded shrink-0" />
+        ) : (
+          <div className="w-12 h-16 rounded bg-gray-800 flex items-center justify-center shrink-0">
+            <Film className="w-4 h-4 text-gray-600" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <p className="text-gray-100 font-medium truncate">{film.title}</p>
+            {film.is_premium && <Lock className="w-3 h-3 text-amber-400 shrink-0" />}
+          </div>
+          {film.is_premium && film.price != null && (
+            <p className="text-xs text-amber-400/70">{film.price} €</p>
+          )}
+          <p className="text-gray-500 text-xs mt-0.5">
+            {film.genre ?? '—'} · {film.country ?? '—'} · {film.year}
+          </p>
+        </div>
+        <span className={clsx('badge shrink-0', STATUS_COLORS[film.status])}>{film.status}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-800">
+        <span className="text-xs text-gray-500">{film.view_count.toLocaleString('fr-FR')} vues · {film.language.toUpperCase()}</span>
+        <div className="flex items-center gap-1">
+          {film.status !== 'published' && canEdit && (
+            <button onClick={onPublish} title="Publier" className="p-1.5 text-gray-400 hover:text-emerald-400 transition-colors">
+              <Globe className="w-4 h-4" />
+            </button>
+          )}
+          {canEdit ? (
+            <button onClick={onEdit} title="Modifier" className="p-1.5 text-gray-400 hover:text-violet-400 transition-colors">
+              <Edit2 className="w-4 h-4" />
+            </button>
+          ) : (
+            <span className="px-2 py-1 text-xs text-gray-600 italic">Lecture seule</span>
+          )}
+          {canEdit && (
+            <button onClick={onDelete} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-400 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -76,7 +76,7 @@ export function UserContentDrawer({ user, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-800 shrink-0">
           <div className="w-10 h-10 rounded-full bg-violet-600/20 flex items-center justify-center text-violet-400 font-bold uppercase text-sm shrink-0">
-            {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
+            {(user.first_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -108,13 +108,13 @@ export function UserContentDrawer({ user, onClose }: Props) {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-1">
             {TABS.map(t => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={clsx(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
                   tab === t.key
                     ? 'bg-violet-600 text-white'
                     : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
