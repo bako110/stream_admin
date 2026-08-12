@@ -91,12 +91,16 @@ export const usersService = {
     // form_started_at/device_fingerprint (anti-bot du formulaire public) —
     // sans objet ici : la création vient d'un admin authentifié, pas d'un
     // visiteur anonyme. Valeurs neutres pour satisfaire le schéma.
+    // device_fingerprint doit être UNIQUE à chaque appel : le backend limite
+    // à 3 créations de compte par fingerprint/24h (anti-bot) — une valeur fixe
+    // partagée par tous les managers créés depuis l'admin finit par déclencher
+    // ce blocage après seulement 3 créations dans la journée.
     const { data } = await api.post<User>('/auth/register', {
       ...payload,
       date_of_birth: '2000-01-01',
       gender: 'prefer_not_to_say',
       form_started_at: Date.now() - 5000,
-      device_fingerprint: 'admin-panel',
+      device_fingerprint: `admin-panel-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     })
     await api.put(`/users/${data.id}/role`, null, { params: { role: 'manager' } })
     return data
