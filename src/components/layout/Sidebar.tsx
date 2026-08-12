@@ -37,7 +37,6 @@ const NAV_MANAGER = [
   { to: '/feedback', icon: MessageSquareText, label: 'Retours utilisateurs' },
   { to: '/support', icon: LifeBuoy, label: 'Support' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
-  { to: '/finance', icon: TrendingUp, label: 'Finance' },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
