@@ -20,11 +20,36 @@ export async function uploadImage(file: File, folder = 'content'): Promise<Uploa
   return data.uploaded[0]
 }
 
+async function getFreshAccessToken(): Promise<string | null> {
+  // Un gros upload peut prendre plus longtemps que la durée de vie de
+  // l'access token (30 min en prod) — le rafraîchir juste avant de démarrer
+  // le XHR évite un 401 en fin d'upload après plusieurs minutes de transfert.
+  const refresh = localStorage.getItem('refresh_token')
+  if (!refresh) return localStorage.getItem('access_token')
+
+  try {
+    const directBase = import.meta.env.VITE_API_DIRECT_URL ?? ''
+    const res = await fetch(`${directBase}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refresh }),
+    })
+    if (!res.ok) return localStorage.getItem('access_token')
+    const data = await res.json()
+    localStorage.setItem('access_token', data.access_token)
+    return data.access_token
+  } catch {
+    return localStorage.getItem('access_token')
+  }
+}
+
 export async function uploadVideo(
   file: File,
   folder = 'content',
   onProgress?: (pct: number) => void,
 ): Promise<VideoUploadResult> {
+  const token = await getFreshAccessToken()
+
   return new Promise((resolve, reject) => {
     const form = new FormData()
     form.append('file', file)
@@ -35,7 +60,6 @@ export async function uploadVideo(
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${directBase}/api/v1/upload/video?folder=${folder}`)
 
-    const token = localStorage.getItem('access_token')
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
     if (onProgress) {
